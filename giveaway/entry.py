@@ -16,7 +16,7 @@ class GiveawayEntry:
     delay = 4.0  # seconds of delay between field entries
     delay_noise = 1.0  # seconds of delay noise (magnitude of randomization)
     isValid = False
-    actually_enter = False
+    actually_enter = True
     _driver = []
 
     # Constructor
@@ -64,10 +64,14 @@ class GiveawayEntry:
         try:
             if self.actually_enter:
                 button.click()
+            else:
+                print('Simulating submission')
         except:
             self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             if self.actually_enter:
                 button.click()
+            else:
+                print('Simulating submission')
 
         # pause for short time to manually verify submission, if desired
         time.sleep(5)
@@ -83,11 +87,11 @@ class SteamyKitchenEntry(GiveawayEntry):
     # Enter Giveaway method
     def enter_giveaway(self, person):
 
+        if not self.isValid:
+            print('Giveaway for {} has expired'.format(self.url))
+
         # short circuit entering the giveaway if it is not important enough (based on rating)
-        if self.check_rating():
-            return
-        # only enter giveaway if it hasn't reached expiration yet
-        elif self.isValid:
+        elif self.check_rating():
 
             # Open web page and begin entry process
             self.init_driver()
@@ -100,8 +104,6 @@ class SteamyKitchenEntry(GiveawayEntry):
             # Submit form
             button = self._driver.find_element_by_id('skg_submit_button')
             self.click_submit_button(button)
-        else:
-            print('Giveaway for {} has expired'.format(self.url))
 
 
 # Entry class for LeitesCulinaria.com giveaways
@@ -110,11 +112,11 @@ class LeitesCulinariaEntry(GiveawayEntry):
     # Enter Giveaway method
     def enter_giveaway(self, person):
 
+        if not self.isValid:
+            print('Giveaway for {} has expired'.format(self.url))
+
         # short circuit entering the giveaway if it is not important enough (based on rating)
-        if self.check_rating():
-            return
-        # only enter giveaway if it hasn't reached expiration yet
-        elif self.isValid:
+        elif self.check_rating():
 
             # Open web page and begin entry process
             self.init_driver()
@@ -126,5 +128,3 @@ class LeitesCulinariaEntry(GiveawayEntry):
             # Submit form
             button = self._driver.find_element_by_class_name('giveaway-field')
             self.click_submit_button(button)
-        else:
-            print('Giveaway for {} has expired'.format(self.url))
