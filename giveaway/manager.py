@@ -4,18 +4,17 @@ import time
 import random
 
 
-class GiveawayManager:
+class GiveawayEntrant:
+    person = []
     giveaways = []
-    people = []
     today = ''
     delay = 15  # seconds of delay between giveaway entries
     delay_noise = 5  # seconds of delay noise (magnitude of randomization)
 
-    def __init__(self, url_file, people):
+    def __init__(self, url_file, person):
+        self.person = person
         from datetime import date
         import os
-
-        self.people = people
 
         # get today's date
         today = date.today()
@@ -26,7 +25,7 @@ class GiveawayManager:
             data = f.readlines()
 
         # read urls of giveaways entered today
-        entered_filename = 'logs/{}.entered'.format(self.today)
+        entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
         entered_data = []
         if os.path.isfile(entered_filename):
             with open(entered_filename, "r") as f:
@@ -47,16 +46,29 @@ class GiveawayManager:
                 elif 'leitesculinaria.com' in url:
                     self.giveaways.append(ge.LeitesCulinariaEntry(url, expire_date, rating))
 
-    def run(self):
+    def enter_giveaways(self):
         # open entered giveaways log file for writing
-        entered_filename = 'logs/{}.entered'.format(self.today)
+        entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
         writefile = open(entered_filename, 'a')
 
         for g in self.giveaways:
-            for p in self.people:
-                g.enter_giveaway(p)
-                time.sleep(self.delay + self.delay_noise*random.random())
-                if g.isEntered:
-                    writefile.write('{}\n'.format(g.url))
+            g.enter_giveaway(self.person)
+            time.sleep(self.delay + self.delay_noise * random.random())
+            if g.isEntered:
+                writefile.write('{}\n'.format(g.url))
 
         writefile.close()
+
+
+class GiveawayManager:
+    entrants = []
+
+    def __init__(self, url_file, people):
+
+        # Create list of entrants
+        for p in people:
+            self.entrants.append(GiveawayEntrant(url_file, p))
+
+    def run(self):
+        for entrant in self.entrants:
+            entrant.enter_giveaways()
