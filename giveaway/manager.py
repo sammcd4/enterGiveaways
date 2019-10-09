@@ -6,20 +6,23 @@ import random
 
 class GiveawayManager:
     giveaways = []
+    people = []
     today = ''
     delay = 15  # seconds of delay between giveaway entries
     delay_noise = 5  # seconds of delay noise (magnitude of randomization)
 
-    def __init__(self, urlFile):
+    def __init__(self, url_file, people):
         from datetime import date
         import os
+
+        self.people = people
 
         # get today's date
         today = date.today()
         self.today = today.strftime("%Y-%m-%d")
 
         # read urls of giveaways to enter
-        with open(urlFile, 'r') as f:
+        with open(url_file, 'r') as f:
             data = f.readlines()
 
         # read urls of giveaways entered today
@@ -50,10 +53,10 @@ class GiveawayManager:
         writefile = open(entered_filename, 'a')
 
         for g in self.giveaways:
-            sam = gp.Person("Sam", "McDonald", "whitehops@gmail.com")
-            g.enter_giveaway(sam)
-            time.sleep(self.delay + self.delay_noise*random.random())
-            if g.isEntered:
-                writefile.write('{}\n'.format(g.url))
+            for p in self.people:
+                g.enter_giveaway(p)
+                time.sleep(self.delay + self.delay_noise*random.random())
+                if g.isEntered:
+                    writefile.write('{}\n'.format(g.url))
 
         writefile.close()
