@@ -45,7 +45,6 @@ class GiveawayEntry:
     # Check if giveaway rating is satisfied
     def check_rating(self):
         if random.randint(1, 10) > self.rating:
-            print('Skipping Giveaway {} because only {}0% chance of entry'.format(self.url, self.rating))
             return False
         else:
             return True
@@ -82,7 +81,6 @@ class GiveawayEntry:
         time.sleep(5)
         self._driver.close()
 
-        print('Entered Giveaway for {}'.format(self.url))
         self.isEntered = True
 
 
@@ -112,6 +110,11 @@ class SteamyKitchenEntry(GiveawayEntry):
             # Submit form
             button = self._driver.find_element_by_id('skg_submit_button')
             self.click_submit_button(button)
+
+            if self.isEntered:
+                print('{} entered Giveaway for {}'.format(person.first_name, self.url))
+        else:
+            print('{} skipping Giveaway {} because only {}0% chance of entry'.format(person.first_name, self.url, self.rating))
 
 
 # Entry class for LeitesCulinaria.com giveaways

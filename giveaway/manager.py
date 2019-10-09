@@ -62,6 +62,8 @@ class GiveawayEntrant:
 
 class GiveawayManager:
     entrants = []
+    delay = 150  # seconds of delay between giveaway entries
+    delay_noise = 50  # seconds of delay noise (magnitude of randomization)
 
     def __init__(self, url_file, people):
 
@@ -72,3 +74,4 @@ class GiveawayManager:
     def run(self):
         for entrant in self.entrants:
             entrant.enter_giveaways()
+            time.sleep(self.delay + self.delay_noise * random.random())
