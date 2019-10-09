@@ -51,9 +51,14 @@ class GiveawayEntry:
             return True
 
     def init_driver(self):
-        self._driver = selenium.webdriver.Chrome()
-        self._driver.get(self.url)
-        time.sleep(self.delay + self.delay_noise * random.random())
+        try:
+            self._driver = selenium.webdriver.Chrome()
+            self._driver.get(self.url)
+            time.sleep(self.delay + self.delay_noise * random.random())
+            return True
+        except:
+            print('Unable to initialize webpage!')
+            return False
 
     def fill_textbox(self, text_id, text_str):
         last_name = self._driver.find_element_by_id(text_id)
@@ -94,7 +99,10 @@ class SteamyKitchenEntry(GiveawayEntry):
         elif self.check_rating():
 
             # Open web page and begin entry process
-            self.init_driver()
+            success = self.init_driver()
+            if not success:
+                # Just skip the giveaway and move on
+                return
 
             # Fill form
             self.fill_textbox('skg_first_name', person.first_name)
@@ -119,7 +127,10 @@ class LeitesCulinariaEntry(GiveawayEntry):
         elif self.check_rating():
 
             # Open web page and begin entry process
-            self.init_driver()
+            success = self.init_driver()
+            if not success:
+                # Just skip the giveaway and move on
+                return
 
             # Fill form
             self.fill_textbox('giveaway_entry_name', person.full_name)
