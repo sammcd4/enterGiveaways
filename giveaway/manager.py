@@ -57,7 +57,7 @@ class GiveawayEntrant:
             g.enter_giveaway(self.person)
             time.sleep(self.delay + self.delay_noise * random.random())
             if g.isEntered:
-                print('Writing {} to logs/{}.entered'.format(g.url, self.today + '-' + self.person.first_name))
+                print('\tWriting to logs/{}.entered'.format(self.today + '-' + self.person.first_name))
                 writefile.write('{}\n'.format(g.url))
 
         writefile.close()
