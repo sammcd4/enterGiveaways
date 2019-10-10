@@ -49,18 +49,19 @@ class GiveawayEntrant:
                     self.giveaways.append(ge.LeitesCulinariaEntry(url_str, expire_date, rating))
 
     def enter_giveaways(self):
-        # open entered giveaways log file for writing
-        entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
-        writefile = open(entered_filename, 'a')
 
         for g in self.giveaways:
+            # open entered giveaways log file for writing
+            entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
+            writefile = open(entered_filename, 'a')
+
             g.enter_giveaway(self.person)
             time.sleep(self.delay + self.delay_noise * random.random())
             if g.isEntered:
                 print('\tWriting to logs/{}.entered'.format(self.today + '-' + self.person.first_name))
                 writefile.write('{}\n'.format(g.url))
 
-        writefile.close()
+            writefile.close()
 
 
 class GiveawayManager:
