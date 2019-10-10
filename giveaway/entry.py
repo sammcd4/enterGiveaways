@@ -16,7 +16,7 @@ class GiveawayEntry:
     delay = 4.0  # seconds of delay between field entries
     delay_noise = 1.0  # seconds of delay noise (magnitude of randomization)
     isValid = False
-    actually_enter = True
+    actually_enter = False
     _driver = []
 
     # Constructor
