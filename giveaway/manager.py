@@ -37,13 +37,13 @@ class GiveawayEntrant:
         for d in data:
             data_str = d.replace("\n", "")
             [expire_date, rating, url_str] = data_str.split(' ')
-            print('url_str in giveaway data is {}'.format(url_str))
+            # print('url_str in giveaway data is {}'.format(url_str))
 
             if url_str in entered_data:
                 print('Already entered {} today'.format(url_str))
             else:
                 if 'steamykitchen.com' in url_str:
-                    print('Creating new SteamyKitchen giveaway for {}'.format(url_str))
+                    print('{} Creating new SteamyKitchen giveaway for {}'.format(person.first_name, url_str))
                     self.giveaways.append(ge.SteamyKitchenEntry(url_str, expire_date, rating))
                 elif 'leitesculinaria.com' in url_str:
                     self.giveaways.append(ge.LeitesCulinariaEntry(url_str, expire_date, rating))
