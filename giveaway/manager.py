@@ -52,13 +52,18 @@ class GiveawayEntrant:
 
         for g in self.giveaways:
             # open entered giveaways log file for writing
-            entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
+            if g.actually_enter:
+                entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
+            else:
+                entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name + '-test')
+
             writefile = open(entered_filename, 'a')
 
             g.enter_giveaway(self.person)
-            time.sleep(self.delay + self.delay_noise * random.random())
+            if not g.noDelay:
+                time.sleep(self.delay + self.delay_noise * random.random())
             if g.isEntered:
-                print('\tWriting to logs/{}.entered'.format(self.today + '-' + self.person.first_name))
+                print('\tWriting to {}'.format(entered_filename))
                 writefile.write('{}\n'.format(g.url))
 
             writefile.close()
