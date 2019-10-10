@@ -84,17 +84,16 @@ class GiveawayEntry:
         time.sleep(self.delay + self.delay_noise * random.random())
 
     def click_submit_button(self, button):
+
+        if not self.actually_enter:
+            print('\tSimulating submission')
+            return
+
         try:
-            if self.actually_enter:
-                button.click()
-            else:
-                print('\tSimulating submission')
+            button.click()
         except:
             self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            if self.actually_enter:
-                button.click()
-            else:
-                print('Simulating submission')
+            button.click()
 
         # pause for short time to manually verify submission, if desired
         time.sleep(5)
