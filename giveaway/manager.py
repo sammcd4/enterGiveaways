@@ -35,16 +35,18 @@ class GiveawayEntrant:
 
         # cleanup url data and create giveaway entries
         for d in data:
-            url_str = d.replace("\n", "")
-            [expire_date, rating, url] = url_str.split(' ')
+            data_str = d.replace("\n", "")
+            [expire_date, rating, url_str] = data_str.split(' ')
+            print('url_str in giveaway data is {}'.format(url_str))
 
-            if url in entered_data:
-                print('Already entered {} today'.format(url))
+            if url_str in entered_data:
+                print('Already entered {} today'.format(url_str))
             else:
-                if 'steamykitchen.com' in url:
-                    self.giveaways.append(ge.SteamyKitchenEntry(url, expire_date, rating))
-                elif 'leitesculinaria.com' in url:
-                    self.giveaways.append(ge.LeitesCulinariaEntry(url, expire_date, rating))
+                if 'steamykitchen.com' in url_str:
+                    print('Creating new SteamyKitchen giveaway for {}'.format(url_str))
+                    self.giveaways.append(ge.SteamyKitchenEntry(url_str, expire_date, rating))
+                elif 'leitesculinaria.com' in url_str:
+                    self.giveaways.append(ge.LeitesCulinariaEntry(url_str, expire_date, rating))
 
     def enter_giveaways(self):
         # open entered giveaways log file for writing
@@ -55,6 +57,7 @@ class GiveawayEntrant:
             g.enter_giveaway(self.person)
             time.sleep(self.delay + self.delay_noise * random.random())
             if g.isEntered:
+                print('Writing {} to logs/{}.entered'.format(g.url, self.today + '-' + self.person.first_name))
                 writefile.write('{}\n'.format(g.url))
 
         writefile.close()
