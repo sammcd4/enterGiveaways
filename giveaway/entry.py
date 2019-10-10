@@ -17,11 +17,16 @@ class GiveawayEntry:
     delay_noise = 1.0  # seconds of delay noise (magnitude of randomization)
     isValid = False
     actually_enter = False
+    noDelay = True
     _driver = []
 
     # Constructor
     def __init__(self, url, expiration_date, rating):
         from datetime import date
+
+        if self.noDelay:
+            self.delay = 0
+            self.delay_noise = 0
 
         # get today's date
         today = date.today()
@@ -40,7 +45,21 @@ class GiveawayEntry:
 
     # Enter Giveaway method
     def enter_giveaway(self, person):
-        pass
+        print(person.first_name + ' ' + self.url)
+        if not self.isValid:
+            print('\tGiveaway has expired')
+
+        # short circuit entering the giveaway if it is not important enough (based on rating)
+        elif self.check_rating():
+
+            # Open web page and begin entry process
+            if not self.init_driver():
+                return
+
+            self.fill_and_submit(person)
+
+        else:
+            print('\tSkipping giveaway because only {}0% chance of entry'.format(self.rating))
 
     # Check if giveaway rating is satisfied
     def check_rating(self):
@@ -56,7 +75,7 @@ class GiveawayEntry:
             time.sleep(self.delay + self.delay_noise * random.random())
             return True
         except:
-            print('Unable to initialize webpage!')
+            print('\tUnable to initialize webpage!')
             return False
 
     def fill_textbox(self, text_id, text_str):
@@ -82,63 +101,33 @@ class GiveawayEntry:
         self._driver.close()
 
         self.isEntered = True
+        print('\tEntered Giveaway')
 
 
 # Entry class for SteamyKitchen.com giveaways
 class SteamyKitchenEntry(GiveawayEntry):
 
-    # Enter Giveaway method
-    def enter_giveaway(self, person):
+    # Fill and submit process specific to SteamyKitchen
+    def fill_and_submit(self, person):
+        # Fill form
+        self.fill_textbox('skg_first_name', person.first_name)
+        self.fill_textbox('skg_last_name', person.last_name)
+        self.fill_textbox('skg_email', person.email)
 
-        if not self.isValid:
-            print('Giveaway for {} has expired'.format(self.url))
-
-        # short circuit entering the giveaway if it is not important enough (based on rating)
-        elif self.check_rating():
-
-            # Open web page and begin entry process
-            success = self.init_driver()
-            if not success:
-                # Just skip the giveaway and move on
-                return
-
-            # Fill form
-            self.fill_textbox('skg_first_name', person.first_name)
-            self.fill_textbox('skg_last_name', person.last_name)
-            self.fill_textbox('skg_email', person.email)
-
-            # Submit form
-            button = self._driver.find_element_by_id('skg_submit_button')
-            self.click_submit_button(button)
-
-            if self.isEntered:
-                print('{} entered Giveaway for {}'.format(person.first_name, self.url))
-        else:
-            print('{} skipping Giveaway {} because only {}0% chance of entry'.format(person.first_name, self.url, self.rating))
+        # Submit form
+        button = self._driver.find_element_by_id('skg_submit_button')
+        self.click_submit_button(button)
 
 
 # Entry class for LeitesCulinaria.com giveaways
 class LeitesCulinariaEntry(GiveawayEntry):
 
-    # Enter Giveaway method
-    def enter_giveaway(self, person):
+    # Fill and submit process specific to SteamyKitchen
+    def fill_and_submit(self, person):
+        # Fill form
+        self.fill_textbox('giveaway_entry_name', person.full_name)
+        self.fill_textbox('giveaway_entry_email', person.email)
 
-        if not self.isValid:
-            print('Giveaway for {} has expired'.format(self.url))
-
-        # short circuit entering the giveaway if it is not important enough (based on rating)
-        elif self.check_rating():
-
-            # Open web page and begin entry process
-            success = self.init_driver()
-            if not success:
-                # Just skip the giveaway and move on
-                return
-
-            # Fill form
-            self.fill_textbox('giveaway_entry_name', person.full_name)
-            self.fill_textbox('giveaway_entry_email', person.email)
-
-            # Submit form
-            button = self._driver.find_element_by_class_name('giveaway-field')
-            self.click_submit_button(button)
+        # Submit form
+        button = self._driver.find_element_by_class_name('giveaway-field')
+        self.click_submit_button(button)
