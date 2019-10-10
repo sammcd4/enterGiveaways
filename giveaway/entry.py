@@ -16,8 +16,8 @@ class GiveawayEntry:
     delay = 4.0  # seconds of delay between field entries
     delay_noise = 1.0  # seconds of delay noise (magnitude of randomization)
     isValid = False
-    actually_enter = True
-    noDelay = False
+    actually_enter = False
+    noDelay = True
     _driver = []
 
     # Constructor
@@ -87,17 +87,25 @@ class GiveawayEntry:
 
         if not self.actually_enter:
             print('\tSimulating submission')
-            return
+        else:
+            try:
+                button.click()
+            except:
+                self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                button.click()
+
+            # pause for short time to manually verify submission, if desired
+            time.sleep(5)
 
         try:
-            button.click()
+            self._driver.close()
         except:
-            self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            button.click()
+            print('\tWebpage could not be closed!')
 
-        # pause for short time to manually verify submission, if desired
-        time.sleep(5)
-        self._driver.close()
+        try:
+            self._driver.quit()
+        except:
+            print('\tDriver could not be quit!')
 
         self.isEntered = True
         print('\tEntered Giveaway')
