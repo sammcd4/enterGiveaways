@@ -88,7 +88,7 @@ class GiveawayEntry:
             if self.actually_enter:
                 button.click()
             else:
-                print('Simulating submission')
+                print('\tSimulating submission')
         except:
             self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             if self.actually_enter:
