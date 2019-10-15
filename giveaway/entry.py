@@ -79,8 +79,11 @@ class GiveawayEntry:
             return False
 
     def fill_textbox(self, text_id, text_str):
-        last_name = self._driver.find_element_by_id(text_id)
-        last_name.send_keys(text_str)
+        try:
+            last_name = self._driver.find_element_by_id(text_id)
+            last_name.send_keys(text_str)
+        except:
+            print('\tUnable to fill {} textbox with {}'.format(text_id, text_str))
         time.sleep(self.delay + self.delay_noise * random.random())
 
     def click_submit_button(self, button):
