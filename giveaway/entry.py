@@ -98,7 +98,8 @@ class GiveawayEntry:
                 button.click()
 
             # pause for short time to manually verify submission, if desired
-            time.sleep(5)
+            if not self.noDelay:
+                time.sleep(5)
 
         try:
             self._driver.close()
@@ -125,7 +126,10 @@ class SteamyKitchenEntry(GiveawayEntry):
         self.fill_textbox('skg_email', person.email)
 
         # Submit form
-        button = self._driver.find_element_by_id('skg_submit_button')
+        try:
+            button = self._driver.find_element_by_id('skg_submit_button')
+        except:
+            print('\tUnable to find submit element')
         self.click_submit_button(button)
 
 
@@ -139,5 +143,8 @@ class LeitesCulinariaEntry(GiveawayEntry):
         self.fill_textbox('giveaway_entry_email', person.email)
 
         # Submit form
-        button = self._driver.find_element_by_class_name('giveaway-field')
+        try:
+            button = self._driver.find_element_by_class_name('giveaway-field')
+        except:
+            print('\tUnable to find submit element')
         self.click_submit_button(button)

@@ -10,11 +10,16 @@ class GiveawayEntrant:
     today = ''
     delay = 15  # seconds of delay between giveaway entries
     delay_noise = 5  # seconds of delay noise (magnitude of randomization)
+    noDelay = False
 
     def __init__(self, url_file, person):
         self.person = person
         from datetime import date
         import os
+
+        if self.noDelay:
+            self.delay = 0
+            self.delay_noise = 0
 
         # get today's date
         today = date.today()
@@ -34,6 +39,7 @@ class GiveawayEntrant:
             entered_data = [line.rstrip('\n') for line in entered_data]
 
         # cleanup url data and create giveaway entries
+        self.giveaways = []
         for d in data:
             data_str = d.replace("\n", "")
             [expire_date, rating, url_str] = data_str.split(' ')
@@ -78,7 +84,8 @@ class GiveawayManager:
 
         # Create list of entrants
         for p in people:
-            self.entrants.append(GiveawayEntrant(url_file, p))
+            entrant = GiveawayEntrant(url_file, p)
+            self.entrants.append(entrant)
 
     def run(self):
         for entrant in self.entrants:
