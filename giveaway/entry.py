@@ -79,25 +79,66 @@ class GiveawayEntry:
             return False
 
     def fill_textbox(self, text_id, text_str):
-        last_name = self._driver.find_element_by_id(text_id)
-        last_name.send_keys(text_str)
+        try:
+            element = self._driver.find_element_by_id(text_id)
+            element.send_keys(text_str)
+        except:
+            print('\tUnable to fill {} textbox with {}'.format(text_id, text_str))
         time.sleep(self.delay + self.delay_noise * random.random())
+
+    def fill_textbox_and_submit(self, text_id, text_str):
+        try:
+            element = self._driver.find_element_by_id(text_id)
+            element.send_keys(text_str)
+
+            if not self.actually_enter:
+                print('\tSimulating submission')
+            else:
+                element.submit()
+        except:
+            print('\tUnable to fill {} textbox with {}'.format(text_id, text_str))
+
+        self.confirm_submission()
 
     def click_submit_button(self, button):
 
         if not self.actually_enter:
             print('\tSimulating submission')
-            return
+        else:
+            try:
+                button.click()
+            except:
+                self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                button.click()
+
+        self.confirm_submission()
+
+    def submit_with_enter(self, button):
+        if not self.actually_enter:
+            print('\tSimulating submission')
+        else:
+            try:
+                button.submit()
+            except:
+                self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                button.click()
+
+        self.confirm_submission()
+
+    def confirm_submission(self):
+        # pause for short time to manually verify submission, if desired
+        if not self.noDelay:
+            time.sleep(5)
 
         try:
-            button.click()
+            self._driver.close()
         except:
-            self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            button.click()
+            print('\tWebpage could not be closed!')
 
-        # pause for short time to manually verify submission, if desired
-        time.sleep(5)
-        self._driver.close()
+        try:
+            self._driver.quit()
+        except:
+            print('\tDriver could not be quit!')
 
         self.isEntered = True
         print('\tEntered Giveaway')
@@ -114,7 +155,10 @@ class SteamyKitchenEntry(GiveawayEntry):
         self.fill_textbox('skg_email', person.email)
 
         # Submit form
-        button = self._driver.find_element_by_id('skg_submit_button')
+        try:
+            button = self._driver.find_element_by_id('skg_submit_button')
+        except:
+            print('\tUnable to find submit element')
         self.click_submit_button(button)
 
 
@@ -125,8 +169,4 @@ class LeitesCulinariaEntry(GiveawayEntry):
     def fill_and_submit(self, person):
         # Fill form
         self.fill_textbox('giveaway_entry_name', person.full_name)
-        self.fill_textbox('giveaway_entry_email', person.email)
-
-        # Submit form
-        button = self._driver.find_element_by_class_name('giveaway-field')
-        self.click_submit_button(button)
+        self.fill_textbox_and_submit('giveaway_entry_email', person.email)
