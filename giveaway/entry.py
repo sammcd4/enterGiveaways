@@ -100,6 +100,17 @@ class GiveawayEntry:
 
         self.confirm_submission()
 
+    def submit_from_textbox(self, text_id):
+        try:
+            element = self._driver.find_element_by_id(text_id)
+
+            if not self.actually_enter:
+                print('\tSimulating submission')
+            else:
+                element.submit()
+        except:
+            print('\tUnable to submit form from {} textbox'.format(text_id))
+
     def click_submit_button(self, button):
 
         if not self.actually_enter:
@@ -165,8 +176,26 @@ class SteamyKitchenEntry(GiveawayEntry):
 # Entry class for LeitesCulinaria.com giveaways
 class LeitesCulinariaEntry(GiveawayEntry):
 
+    extra_entered = False
+
     # Fill and submit process specific to SteamyKitchen
     def fill_and_submit(self, person):
         # Fill form
         self.fill_textbox('giveaway_entry_name', person.full_name)
-        self.fill_textbox_and_submit('giveaway_entry_email', person.email)
+        self.fill_textbox('giveaway_entry_email', person.email)
+
+        self.submit_from_textbox('giveaway_entry_email')
+
+    def submit_from_textbox(self, text_id):
+        try:
+            element = self._driver.find_element_by_id(text_id)
+
+            if not self.actually_enter:
+                print('\tSimulating submission')
+            else:
+                element.submit()
+        except:
+            print('\tUnable to submit form from {} textbox'.format(text_id))
+
+        if LeitesCulinariaEntry.extra_entered:
+            self.fill_textbox('giveaway_entry_name')
