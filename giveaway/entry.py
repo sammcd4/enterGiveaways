@@ -144,7 +144,7 @@ class GiveawayEntry:
         try:
             self._driver.close()
         except:
-            print('\tWebpage could not be closed!')
+            print('\tWeb page could not be closed!')
 
         try:
             self._driver.quit()
@@ -155,22 +155,48 @@ class GiveawayEntry:
         print('\tEntered Giveaway')
 
 
-# Entry class for SteamyKitchen.com giveaways
-class SteamyKitchenEntry(GiveawayEntry):
+# Generic entry class for First name, Last name, email fields
+class FirstLastEmailGiveawayEntry(GiveawayEntry):
+    first_name_id = ''
+    last_name_id = ''
+    email_id = ''
+    submit_button_id = ''
 
     # Fill and submit process specific to SteamyKitchen
     def fill_and_submit(self, person):
         # Fill form
-        self.fill_textbox('skg_first_name', person.first_name)
-        self.fill_textbox('skg_last_name', person.last_name)
-        self.fill_textbox('skg_email', person.email)
+        self.fill_textbox(self.first_name_id, person.first_name)
+        self.fill_textbox(self.last_name_id, person.last_name)
+        self.fill_textbox(self.email_id, person.email)
 
         # Submit form
         try:
-            button = self._driver.find_element_by_id('skg_submit_button')
+            button = self._driver.find_element_by_id(self.submit_button_id)
         except:
-            print('\tUnable to find submit element')
+            print('\tUnable to find submit element {}'.format(self.submit_button_id))
         self.click_submit_button(button)
+
+
+# Entry class for SteamyKitchen.com giveaways
+class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
+    def __init__(self, url, expiration_date, rating):
+        # Fill form
+        super().__init__(url, expiration_date, rating)
+        self.first_name_id = 'skg_first_name'
+        self.last_name_id = 'skg_last_name'
+        self.email_id = 'skg_email'
+        self.submit_button_id = 'skg_submit_button'
+
+
+# Entry class for GlutenFree.com giveaways
+class GlutenFreeEntry(FirstLastEmailGiveawayEntry):
+    def __init__(self, url, expiration_date, rating):
+        # Fill form
+        super().__init__(url, expiration_date, rating)
+        self.first_name_id = 'input_1_1'
+        self.last_name_id = 'input_1_2'
+        self.email_id = 'input_1_3'
+        self.submit_button_id = 'gform_submit_button_1'
 
 
 # Entry class for LeitesCulinaria.com giveaways
@@ -187,8 +213,8 @@ class LeitesCulinariaEntry(GiveawayEntry):
 
         if not LeitesCulinariaEntry.extra_entered:
             LeitesCulinariaEntry.extra_entered = True
-            self.fill_textbox('input_2918_1', person.full_name)
-            self.fill_textbox('input_2918_2', person.email)
-            self.submit_from_textbox('input_2918_2')
+            self.fill_textbox('input_2920_1', person.full_name)
+            self.fill_textbox('input_2920_2', person.email)
+            self.submit_from_textbox('input_2920_2')
 
         self.confirm_submission()
