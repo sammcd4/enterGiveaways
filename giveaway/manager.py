@@ -53,6 +53,8 @@ class GiveawayEntrant:
                     self.giveaways.append(ge.SteamyKitchenEntry(url_str, expire_date, rating))
                 elif 'leitesculinaria.com' in url_str:
                     self.giveaways.append(ge.LeitesCulinariaEntry(url_str, expire_date, rating))
+                elif 'simplygluten-free.com' in url_str:
+                    self.giveaways.append((ge.GlutenFreeEntry(url_str, expire_date, rating)))
 
     def enter_giveaways(self):
 
