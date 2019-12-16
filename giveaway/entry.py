@@ -5,6 +5,9 @@ import random
 
 
 # create giveaway entry class
+from selenium.common.exceptions import StaleElementReferenceException
+
+
 class GiveawayEntry:
     url = ''
     isEntered = False
@@ -47,7 +50,7 @@ class GiveawayEntry:
     def enter_giveaway(self, person):
         print(person.first_name + ' ' + self.url)
         if not self.isValid:
-            print('\tGiveaway has expired')
+            self.print('Giveaway has expired')
 
         # short circuit entering the giveaway if it is not important enough (based on rating)
         elif self.check_rating():
@@ -59,7 +62,7 @@ class GiveawayEntry:
             self.fill_and_submit(person)
 
         else:
-            print('\tSkipping giveaway because only {}0% chance of entry'.format(self.rating))
+            self.print('Skipping giveaway because only {}0% chance of entry'.format(self.rating))
 
     # Check if giveaway rating is satisfied
     def check_rating(self):
@@ -75,15 +78,18 @@ class GiveawayEntry:
             time.sleep(self.delay + self.delay_noise * random.random())
             return True
         except:
-            print('\tUnable to initialize webpage!')
+            self.print('Unable to initialize webpage! Consider updating the webdriver')
             return False
+
+    def print(self, some_str):
+        print('\t' + some_str)
 
     def fill_textbox(self, text_id, text_str):
         try:
             element = self._driver.find_element_by_id(text_id)
             element.send_keys(text_str)
         except:
-            print('\tUnable to fill {} textbox with {}'.format(text_id, text_str))
+            self.print('Unable to fill {} textbox with {}'.format(text_id, text_str))
         time.sleep(self.delay + self.delay_noise * random.random())
 
     def fill_textbox_and_submit(self, text_id, text_str):
@@ -92,11 +98,11 @@ class GiveawayEntry:
             element.send_keys(text_str)
 
             if not self.actually_enter:
-                print('\tSimulating submission')
+                self.print('Simulating submission')
             else:
                 element.submit()
         except:
-            print('\tUnable to fill {} textbox with {}'.format(text_id, text_str))
+            self.print('Unable to fill {} textbox with {}'.format(text_id, text_str))
 
         self.confirm_submission()
 
@@ -105,19 +111,21 @@ class GiveawayEntry:
             element = self._driver.find_element_by_id(text_id)
 
             if not self.actually_enter:
-                print('\tSimulating submission')
+                self.print('Simulating submission')
             else:
                 element.submit()
         except:
-            print('\tUnable to submit form from {} textbox'.format(text_id))
+            self.print('Unable to submit form from {} textbox'.format(text_id))
 
     def click_submit_button(self, button):
 
         if not self.actually_enter:
-            print('\tSimulating submission')
+            self.print('Simulating submission')
         else:
             try:
                 button.click()
+            except StaleElementReferenceException:
+                self.print('StaleElementReferenceException occurred, but likely button still was pressed')
             except:
                 self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 button.click()
@@ -126,10 +134,12 @@ class GiveawayEntry:
 
     def submit_with_enter(self, button):
         if not self.actually_enter:
-            print('\tSimulating submission')
+            self.print('Simulating submission')
         else:
             try:
                 button.submit()
+            except StaleElementReferenceException:
+                self.print('StaleElementReferenceException occurred, but likely button still was pressed')
             except:
                 self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 button.click()
@@ -144,15 +154,15 @@ class GiveawayEntry:
         try:
             self._driver.close()
         except:
-            print('\tWeb page could not be closed!')
+            self.print('Web page could not be closed!')
 
         try:
             self._driver.quit()
         except:
-            print('\tDriver could not be quit!')
+            self.print('Driver could not be quit!')
 
         self.isEntered = True
-        print('\tEntered Giveaway')
+        self.print('Entered Giveaway')
 
 
 # Generic entry class for First name, Last name, email fields
@@ -173,7 +183,7 @@ class FirstLastEmailGiveawayEntry(GiveawayEntry):
         try:
             button = self._driver.find_element_by_id(self.submit_button_id)
         except:
-            print('\tUnable to find submit element {}'.format(self.submit_button_id))
+            self.print('Unable to find submit element {}'.format(self.submit_button_id))
         self.click_submit_button(button)
 
 
