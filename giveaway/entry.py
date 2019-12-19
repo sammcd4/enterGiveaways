@@ -8,6 +8,19 @@ import random
 from selenium.common.exceptions import StaleElementReferenceException
 
 
+class HumanizedDelay:
+    delay = 3.0 # nominal delay value in seconds
+    noise = 1.0
+
+    def delay(self):
+        time.sleep(self.delay + self.noise * random.random())
+
+    @ delay.setter
+    def delay(self, value):
+        self.delay = value
+        if value == 0:
+            self.noise = 0
+
 class GiveawayEntry:
     url = ''
     isEntered = False
@@ -16,8 +29,7 @@ class GiveawayEntry:
     rating = 10
     expiration_datetime = ''
     entered_date = ''
-    delay = 4.0  # seconds of delay between field entries
-    delay_noise = 1.0  # seconds of delay noise (magnitude of randomization)
+    human = HumanizedDelay
     isValid = False
     actually_enter = True
     noDelay = False
@@ -28,8 +40,7 @@ class GiveawayEntry:
         from datetime import date
 
         if self.noDelay:
-            self.delay = 0
-            self.delay_noise = 0
+            self.human.delay = 0
 
         # get today's date
         today = date.today()
@@ -75,7 +86,7 @@ class GiveawayEntry:
         try:
             self._driver = selenium.webdriver.Chrome()
             self._driver.get(self.url)
-            time.sleep(self.delay + self.delay_noise * random.random())
+            self.human.delay()
             return True
         except:
             self.print('Unable to initialize webpage! Consider updating the webdriver')
@@ -90,7 +101,7 @@ class GiveawayEntry:
             element.send_keys(text_str)
         except:
             self.print('Unable to fill {} textbox with {}'.format(text_id, text_str))
-        time.sleep(self.delay + self.delay_noise * random.random())
+        self.human.delay()
 
     def fill_textbox_and_submit(self, text_id, text_str):
         try:
