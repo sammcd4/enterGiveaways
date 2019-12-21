@@ -42,7 +42,8 @@ class GiveawayEntrant:
         self.giveaways = []
         for d in data:
             data_str = d.replace("\n", "")
-            [expire_date, rating, url_str] = data_str.split(' ')
+            [expire_date, rating, num_entries, url_str] = data_str.split(' ')
+            num_entries = int(num_entries)
             # print('url_str in giveaway data is {}'.format(url_str))
 
             if url_str in entered_data:
@@ -50,11 +51,11 @@ class GiveawayEntrant:
             else:
                 if 'steamykitchen.com' in url_str:
                     print('{} Creating new SteamyKitchen giveaway for {}'.format(person.first_name, url_str))
-                    self.giveaways.append(ge.SteamyKitchenEntry(url_str, expire_date, rating))
+                    self.giveaways.append(ge.SteamyKitchenEntry(url_str, expire_date, rating, num_entries))
                 elif 'leitesculinaria.com' in url_str:
-                    self.giveaways.append(ge.LeitesCulinariaEntry(url_str, expire_date, rating))
+                    self.giveaways.append(ge.LeitesCulinariaEntry(url_str, expire_date, rating, num_entries))
                 elif 'simplygluten-free.com' in url_str:
-                    self.giveaways.append(ge.GlutenFreeEntry(url_str, expire_date, rating))
+                    self.giveaways.append(ge.GlutenFreeEntry(url_str, expire_date, rating, num_entries))
 
     def enter_giveaways(self):
 

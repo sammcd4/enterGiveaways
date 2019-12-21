@@ -43,7 +43,7 @@ class GiveawayEntry:
     _driver = []
 
     # Constructor
-    def __init__(self, url, expiration_date, rating):
+    def __init__(self, url, expiration_date, rating, num_entries=1):
         from datetime import date
 
         if self.noDelay:
@@ -56,6 +56,7 @@ class GiveawayEntry:
         self.url = url
         self.expiration_date = expiration_date
         self.rating = int(rating)
+        self.num_entries = num_entries
 
         # convert expiration date to datetime format
         [y, m, d] = expiration_date.split('-')
@@ -73,11 +74,13 @@ class GiveawayEntry:
         # short circuit entering the giveaway if it is not important enough (based on rating)
         elif self.check_rating():
 
-            # Open web page and begin entry process
-            if not self.init_driver():
-                return
+            for i in range(self.num_entries):
+                print('Entry # {}'.format(i+1))
+                # Open web page and begin entry process
+                if not self.init_driver():
+                    return
 
-            self.fill_and_submit(person)
+                self.fill_and_submit(person)
 
         else:
             self.print('Skipping giveaway because only {}0% chance of entry'.format(self.rating))
@@ -208,9 +211,9 @@ class FirstLastEmailGiveawayEntry(GiveawayEntry):
 
 # Entry class for SteamyKitchen.com giveaways
 class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
-    def __init__(self, url, expiration_date, rating):
+    def __init__(self, url, expiration_date, rating, num_entries=1):
         # Fill form
-        super().__init__(url, expiration_date, rating)
+        super().__init__(url, expiration_date, rating, num_entries)
         self.first_name_id = 'skg_first_name'
         self.last_name_id = 'skg_last_name'
         self.email_id = 'skg_email'
@@ -219,9 +222,9 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
 
 # Entry class for GlutenFree.com giveaways
 class GlutenFreeEntry(FirstLastEmailGiveawayEntry):
-    def __init__(self, url, expiration_date, rating):
+    def __init__(self, url, expiration_date, rating, num_entries=1):
         # Fill form
-        super().__init__(url, expiration_date, rating)
+        super().__init__(url, expiration_date, rating, num_entries)
         self.first_name_id = 'input_1_1'
         self.last_name_id = 'input_1_2'
         self.email_id = 'input_1_3'
