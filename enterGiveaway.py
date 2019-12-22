@@ -25,12 +25,8 @@ if update_giveaways:
     g = GiveawayGatherer('GiveawayInfo.txt')
     g.gather()
 
-# TODO: create txt file used to import people into a list. can use file as a constructor for people
 # Choose people to enter giveaways for
-people = [gp.Person('Sam', 'McDonald', 'whitehops@gmail.com')]
-# people.append(gp.Person('Melissa', 'McDonald', 'melis.lott@gmail.com'))
-# people = []
-people.append(gp.Person('Julia', 'Larson', 'juliamcdonald88@gmail.com'))
+people = gp.readpeoplefile('Entrants.txt')
 
 # Choose a list of urls of giveaways to enter
 gm = gm.GiveawayManager('GiveawayInfo.txt', people)
