@@ -70,12 +70,13 @@ class GiveawayEntry:
         print(person.first_name + ' ' + self.url)
         if not self.isValid:
             self.print('Giveaway has expired')
+            # TODO: Need to automatically remove giveaway info from txt
 
         # short circuit entering the giveaway if it is not important enough (based on rating)
         elif self.check_rating():
 
             for i in range(self.num_entries):
-                print('Entry # {}'.format(i+1))
+                self.print('Entry # {}'.format(i+1))
                 # Open web page and begin entry process
                 if not self.init_driver():
                     return
@@ -101,6 +102,8 @@ class GiveawayEntry:
             return True
         except:
             self.print('Unable to initialize webpage! Consider updating the webdriver')
+            if self._driver is not None:
+                self._driver.close()
             return False
 
     def print(self, some_str):
