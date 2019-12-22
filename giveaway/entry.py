@@ -237,6 +237,7 @@ class GlutenFreeEntry(FirstLastEmailGiveawayEntry):
 # Entry class for LeitesCulinaria.com giveaways
 class LeitesCulinariaEntry(GiveawayEntry):
     extra_entered = False
+    num_extra_entries = 0
 
     # Fill and submit process specific to SteamyKitchen
     def fill_and_submit(self, person):
@@ -246,10 +247,11 @@ class LeitesCulinariaEntry(GiveawayEntry):
 
         self.submit_from_textbox('giveaway_entry_email')
 
-        if not LeitesCulinariaEntry.extra_entered:
+        if not LeitesCulinariaEntry.extra_entered and LeitesCulinariaEntry.num_extra_entries<2:
             LeitesCulinariaEntry.extra_entered = True
             self.fill_textbox('input_2920_1', person.full_name)
             self.fill_textbox('input_2920_2', person.email)
             self.submit_from_textbox('input_2920_2')
+            LeitesCulinariaEntry.num_extra_entries += 1
 
         self.confirm_submission()
