@@ -40,7 +40,7 @@ class GiveawayEntry:
     isValid = False
     actually_enter = True
     noDelay = False
-    _driver = []
+    _driver = None
 
     # Constructor
     def __init__(self, url, expiration_date, rating, num_entries=1):
