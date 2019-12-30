@@ -12,7 +12,7 @@ class HumanizedDelay:
 
     def __init__(self):
         self._delay = 3.0  # nominal delay value in seconds
-        self.noise = 1.0
+        self.noise = 2.0
 
     def apply(self):
         time.sleep(self.delay + self.noise * random.random())
@@ -76,12 +76,15 @@ class GiveawayEntry:
         elif self.check_rating():
 
             for i in range(self.num_entries):
-                self.print('Entry # {}'.format(i+1))
+                if self.num_entries > 1:
+                    self.print('Entry # {}'.format(i+1))
+
                 # Open web page and begin entry process
                 if not self.init_driver():
                     return
 
-                self.fill_and_submit(person)
+                if not self.fill_and_submit(person):
+                    return
 
         else:
             self.print('Skipping giveaway because only {}0% chance of entry'.format(self.rating))
@@ -95,13 +98,28 @@ class GiveawayEntry:
 
     def init_driver(self):
 
+        init_status = True
         try:
             self._driver = selenium.webdriver.Chrome()
+        except:
+            self.print('Unable to initialize webpage! Consider updating the webdriver')
+            if self._driver is not None:
+                self._driver.close()
+            return False
+
+        try:
             self._driver.get(self.url)
+        except:
+            self.print('Unable to call driver.get({})! Investigate any changes to webpage'.format(self.url))
+            if self._driver is not None:
+                self._driver.close()
+            return False
+
+        try:
             self.humanDelay.apply()
             return True
         except:
-            self.print('Unable to initialize webpage! Consider updating the webdriver')
+            self.print('Unable to apply delay. Consider updating the HumanizedDelay class ')
             if self._driver is not None:
                 self._driver.close()
             return False
@@ -110,14 +128,19 @@ class GiveawayEntry:
         print('\t' + some_str)
 
     def fill_textbox(self, text_id, text_str):
+
+        filled = False
         try:
             element = self._driver.find_element_by_id(text_id)
             element.send_keys(text_str)
+            filled = True
         except:
             self.print('Unable to fill {} textbox with {}'.format(text_id, text_str))
         self.humanDelay.apply()
+        return filled
 
     def fill_textbox_and_submit(self, text_id, text_str):
+        submitted = False
         try:
             element = self._driver.find_element_by_id(text_id)
             element.send_keys(text_str)
@@ -126,12 +149,14 @@ class GiveawayEntry:
                 self.print('Simulating submission')
             else:
                 element.submit()
+                self.confirm_submission()
         except:
             self.print('Unable to fill {} textbox with {}'.format(text_id, text_str))
 
-        self.confirm_submission()
+        self.close_driver()
 
     def submit_from_textbox(self, text_id):
+        submitted = False
         try:
             element = self._driver.find_element_by_id(text_id)
 
@@ -139,23 +164,27 @@ class GiveawayEntry:
                 self.print('Simulating submission')
             else:
                 element.submit()
+                submitted = True
         except:
             self.print('Unable to submit form from {} textbox'.format(text_id))
 
-    def click_submit_button(self, button):
+        return submitted
 
+    def click_submit_button(self, button):
         if not self.actually_enter:
             self.print('Simulating submission')
         else:
             try:
                 button.click()
+                self.confirm_submission()
             except StaleElementReferenceException:
                 self.print('StaleElementReferenceException occurred, but likely button still was pressed')
             except:
                 self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 button.click()
+                self.confirm_submission()
 
-        self.confirm_submission()
+        self.close_driver()
 
     def submit_with_enter(self, button):
         if not self.actually_enter:
@@ -163,19 +192,25 @@ class GiveawayEntry:
         else:
             try:
                 button.submit()
+                self.confirm_submission()
             except StaleElementReferenceException:
                 self.print('StaleElementReferenceException occurred, but likely button still was pressed')
             except:
                 self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 button.click()
+                self.confirm_submission()
 
-        self.confirm_submission()
+        self.close_driver()
 
     def confirm_submission(self):
         # pause for short time to manually verify submission, if desired
         if not self.noDelay:
             time.sleep(5)
 
+        self.isEntered = True
+        self.print('Entered Giveaway')
+
+    def close_driver(self):
         try:
             self._driver.close()
         except:
@@ -186,10 +221,6 @@ class GiveawayEntry:
         except:
             self.print('Driver could not be quit!')
 
-        self.isEntered = True
-        self.print('Entered Giveaway')
-
-
 # Generic entry class for First name, Last name, email fields
 class FirstLastEmailGiveawayEntry(GiveawayEntry):
     first_name_id = ''
@@ -197,7 +228,7 @@ class FirstLastEmailGiveawayEntry(GiveawayEntry):
     email_id = ''
     submit_button_id = ''
 
-    # Fill and submit process specific to SteamyKitchen
+    # Fill and submit process
     def fill_and_submit(self, person):
         # Fill form
         self.fill_textbox(self.first_name_id, person.first_name)
@@ -205,11 +236,26 @@ class FirstLastEmailGiveawayEntry(GiveawayEntry):
         self.fill_textbox(self.email_id, person.email)
 
         # Submit form
+        found_submit = False
         try:
             button = self._driver.find_element_by_id(self.submit_button_id)
+            found_submit = True
         except:
             self.print('Unable to find submit element {}'.format(self.submit_button_id))
-        self.click_submit_button(button)
+
+        # TODO: improve quick fix of trying a second time. Look into polling
+        if not found_submit:
+            try:
+                button = self._driver.find_element_by_id(self.submit_button_id)
+                self.print('Eventually found submit element {}'.format(self.submit_button_id))
+                found_submit = True
+            except:
+                self.print('Unable to find submit element {}'.format(self.submit_button_id))
+
+        if found_submit:
+            self.click_submit_button(button)
+
+        return found_submit
 
 
 # Entry class for SteamyKitchen.com giveaways
@@ -239,19 +285,22 @@ class LeitesCulinariaEntry(GiveawayEntry):
     extra_entered = False
     num_extra_entries = 0
 
-    # Fill and submit process specific to SteamyKitchen
+    # Fill and submit process specific to Leites Culinaria
     def fill_and_submit(self, person):
+
         # Fill form
         self.fill_textbox('giveaway_entry_name', person.full_name)
         self.fill_textbox('giveaway_entry_email', person.email)
 
-        self.submit_from_textbox('giveaway_entry_email')
+        submitted = self.submit_from_textbox('giveaway_entry_email')
 
-        if not LeitesCulinariaEntry.extra_entered and LeitesCulinariaEntry.num_extra_entries<2:
+        if not LeitesCulinariaEntry.extra_entered and (LeitesCulinariaEntry.num_extra_entries < 2):
             LeitesCulinariaEntry.extra_entered = True
             self.fill_textbox('input_2920_1', person.full_name)
             self.fill_textbox('input_2920_2', person.email)
             self.submit_from_textbox('input_2920_2')
             LeitesCulinariaEntry.num_extra_entries += 1
 
-        self.confirm_submission()
+        if submitted:
+            self.confirm_submission()
+        self.close_driver()
