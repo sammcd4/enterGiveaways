@@ -103,16 +103,14 @@ class GiveawayEntry:
             self._driver = selenium.webdriver.Chrome()
         except:
             self.print('Unable to initialize webpage! Consider updating the webdriver')
-            if self._driver is not None:
-                self._driver.close()
+            self.close_driver()
             return False
 
         try:
             self._driver.get(self.url)
         except:
             self.print('Unable to call driver.get({})! Investigate any changes to webpage'.format(self.url))
-            if self._driver is not None:
-                self._driver.close()
+            self.close_driver()
             return False
 
         try:
@@ -120,9 +118,6 @@ class GiveawayEntry:
             return True
         except:
             self.print('Unable to apply delay. Consider updating the HumanizedDelay class ')
-            if self._driver is not None:
-                self._driver.close()
-            return False
 
     def print(self, some_str):
         print('\t' + some_str)
@@ -211,13 +206,16 @@ class GiveawayEntry:
         self.print('Entered Giveaway')
 
     def close_driver(self):
+
         try:
-            self._driver.close()
+            if self._driver is not None:
+                self._driver.close()
         except:
             self.print('Web page could not be closed!')
 
         try:
-            self._driver.quit()
+            if self._driver is not None:
+                self._driver.quit()
         except:
             self.print('Driver could not be quit!')
 

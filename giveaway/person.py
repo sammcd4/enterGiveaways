@@ -1,3 +1,5 @@
+import random
+
 class Person:
     first_name = ''
     last_name = ''
@@ -23,4 +25,5 @@ def readpeoplefile(file):
         [first_name, last_name, email] = data_str.split(' ')
         people.append(Person(first_name, last_name, email))
 
+    random.shuffle(people)
     return people
