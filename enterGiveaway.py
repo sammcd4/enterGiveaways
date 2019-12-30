@@ -18,7 +18,7 @@ with open('GiveawayInfo.txt', 'w') as f:
 """
 
 # Update all giveaways
-update_giveaways = False
+update_giveaways = True
 
 if update_giveaways:
     from giveaway.gather import GiveawayGatherer
