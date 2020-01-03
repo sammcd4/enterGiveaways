@@ -40,13 +40,16 @@ class GiveawayEntrant:
 
         # cleanup url data and create giveaway entries
         self.giveaways = []
+        setOfURLs = set()
         for d in data:
             data_str = d.replace("\n", "")
             [expire_date, rating, num_entries, url_str] = data_str.split(' ')
             num_entries = int(num_entries)
             # print('url_str in giveaway data is {}'.format(url_str))
 
-            if url_str in entered_data:
+            if url_str in setOfURLs:
+                print('Duplicate giveaway ', url_str)
+            elif url_str in entered_data:
                 print('Already entered {} today'.format(url_str))
             else:
                 if 'steamykitchen.com' in url_str:
