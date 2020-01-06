@@ -112,16 +112,19 @@ class GiveawayEntry:
             self.print('Unable to call driver.get({})! Investigate any changes to webpage'.format(self.url))
             self.close_driver()
             return False
-
+        
+        #  TODO: span.mv_close_button.mv_unbutton
+        
         try:
             self.humanDelay.apply()
             return True
         except:
             self.print('Unable to apply delay. Consider updating the HumanizedDelay class ')
-
+        
     def print(self, some_str):
         print('\t' + some_str)
 
+    
     def fill_textbox(self, text_id, text_str):
 
         filled = False

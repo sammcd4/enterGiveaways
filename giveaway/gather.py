@@ -70,3 +70,12 @@ class GiveawayGatherer:
         html = requests.get(link).text
         soup = BeautifulSoup(html, "html.parser")
         return soup
+
+
+def gather():
+    g = GiveawayGatherer('GiveawayInfo.txt')
+    g.gather()
+
+
+if __name__ == '__main__':
+    gather()
