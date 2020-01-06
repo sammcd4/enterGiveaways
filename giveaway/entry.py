@@ -67,7 +67,7 @@ class GiveawayEntry:
 
     # Enter Giveaway method
     def enter_giveaway(self, person):
-        print(person.first_name + ' ' + self.url)
+        print(person.first_name + ' has opened ' + self.url)
         if not self.isValid:
             self.print('Giveaway has expired')
             # TODO: Need to automatically remove giveaway info from txt
