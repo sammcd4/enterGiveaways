@@ -97,3 +97,21 @@ class GiveawayManager:
         for entrant in self.entrants:
             entrant.enter_giveaways()
             time.sleep(self.delay + self.delay_noise * random.random())
+
+        # TODO: Print out all expired giveaways here at the end so they can easily be removed?
+        #  Or just automate it because manager has access to the GiveawaysInfo.txt file
+
+
+def bulk_operation():
+    with open('GiveawayInfo.txt', 'r') as f:
+        data = f.readlines()
+
+    for f in data:
+        print(f)
+
+    # rewrite info
+    with open('GiveawayInfo.txt', 'w') as f:
+        for line in data:
+            link_idx = line.find('https')
+            new_line = line[:link_idx] + '1 ' + line[link_idx:] + '\n'
+            f.write(new_line)
