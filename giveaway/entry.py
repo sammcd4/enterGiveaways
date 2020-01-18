@@ -205,6 +205,9 @@ class GiveawayEntry:
         if not self.noDelay:
             time.sleep(5)
 
+        # TODO: Verify submission with expected webpage loading after submission
+        # will be specific for each entry
+
         self.isEntered = True
         self.print('Entered Giveaway')
 
@@ -269,6 +272,11 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
         self.email_id = 'skg_email'
         self.submit_button_id = 'skg_submit_button'
 
+    def confirm_submission(self):
+        super().confirm_submission()
+        # https://steamykitchen.com/giveaway-confirmation
+        # TODO: at least verify that new webpage is correct
+
 
 # Entry class for GlutenFree.com giveaways
 class GlutenFreeEntry(FirstLastEmailGiveawayEntry):
@@ -279,6 +287,9 @@ class GlutenFreeEntry(FirstLastEmailGiveawayEntry):
         self.last_name_id = 'input_1_2'
         self.email_id = 'input_1_3'
         self.submit_button_id = 'gform_submit_button_1'
+
+    def confirm_submission(self):
+        super().confirm_submission()
 
 
 # Entry class for LeitesCulinaria.com giveaways
@@ -305,3 +316,6 @@ class LeitesCulinariaEntry(GiveawayEntry):
         if submitted:
             self.confirm_submission()
         self.close_driver()
+
+    def confirm_submission(self):
+        super().confirm_submission()
