@@ -1,6 +1,7 @@
 import giveaway.person as gp
 import giveaway.manager as gm
 
+
 # Update all giveaways
 if False:
     import giveaway.gather as g

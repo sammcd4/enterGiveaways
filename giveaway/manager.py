@@ -29,6 +29,9 @@ class GiveawayEntrant:
         with open(url_file, 'r') as f:
             data = f.readlines()
 
+            # TODO: Use for line in f instead of f.readlines()
+            # Can potentially consolidate logic in for d in data loop
+
         # read urls of giveaways entered today
         entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
         entered_data = []

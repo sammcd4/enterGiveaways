@@ -1,7 +1,9 @@
 import selenium
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import time
 import random
+import sys
 
 
 # create giveaway entry class
@@ -41,6 +43,7 @@ class GiveawayEntry:
     actually_enter = True
     noDelay = False
     _driver = None
+    useHeadless = True
 
     # Constructor
     def __init__(self, url, expiration_date, rating, num_entries=1):
@@ -100,7 +103,21 @@ class GiveawayEntry:
 
         init_status = True
         try:
-            self._driver = selenium.webdriver.Chrome()
+
+            if self.useHeadless:
+                chrome_options = Options()
+                # chrome_options.add_argument("--disable-extensions")
+                if 'win' in sys.platform:
+                    chrome_options.add_argument("--disable-gpu")
+
+                if 'linux' in sys.platform:
+                    chrome_options.add_argument("--no-sandbox")
+
+                chrome_options.add_argument("--headless")
+                self._driver = webdriver.Chrome(options=chrome_options)
+            else:
+                self._driver = selenium.webdriver.Chrome()
+
         except:
             self.print('Unable to initialize webpage! Consider updating the webdriver')
             self.close_driver()
