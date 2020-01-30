@@ -44,6 +44,7 @@ class GiveawayEntry:
     noDelay = False
     _driver = None
     useHeadless = True
+    # TODO: Read from a config file for all these hardcoded settings
 
     # Constructor
     def __init__(self, url, expiration_date, rating, num_entries=1):
@@ -189,33 +190,32 @@ class GiveawayEntry:
         if not self.actually_enter:
             self.print('Simulating submission')
         else:
-            try:
-                button.click()
-                self.confirm_submission()
-            except StaleElementReferenceException:
-                self.print('StaleElementReferenceException occurred, but likely button still was pressed')
-            except:
-                self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                button.click()
-                self.confirm_submission()
+            self.click_button(button)
 
         self.close_driver()
 
-    def submit_with_enter(self, button):
-        if not self.actually_enter:
-            self.print('Simulating submission')
-        else:
+    def click_button(self, button):
+        status = False
+        try:
+            button.click()
+            status = True
+        except StaleElementReferenceException:
+            self.print('StaleElementReferenceException occurred, but likely button still was pressed')
+        except:
+            self.print('Unable to click submit button. Attempting secondary click method...')
+
+        if not status:
+            # secondary click method, if first not successful
             try:
-                button.submit()
-                self.confirm_submission()
-            except StaleElementReferenceException:
-                self.print('StaleElementReferenceException occurred, but likely button still was pressed')
+                button.click()
+                status = True
             except:
                 self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                button.click()
+                self._driver.execute_script("arguments[0].click();", button)
                 self.confirm_submission()
 
-        self.close_driver()
+        if status:
+            self.confirm_submission()
 
     def confirm_submission(self):
         # pause for short time to manually verify submission, if desired
