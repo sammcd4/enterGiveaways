@@ -1,5 +1,6 @@
 import random
 
+
 class Person:
     first_name = ''
     last_name = ''
