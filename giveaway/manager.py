@@ -53,7 +53,7 @@ class GiveawayEntrant:
             if url_str in setOfURLs:
                 print('Duplicate giveaway ', url_str)
             elif url_str in entered_data:
-                print('Already entered {} today'.format(url_str))
+                print('{} already entered {} today'.format(person.first_name, url_str))
             else:
                 if 'steamykitchen.com' in url_str:
                     print('{} Creating new SteamyKitchen giveaway for {}'.format(person.first_name, url_str))

@@ -194,25 +194,32 @@ class GiveawayEntry:
 
         self.close_driver()
 
-    def click_button(self, button):
+    def click_button_impl(self, button, method=1):
         status = False
-        try:
-            button.click()
-            status = True
-        except StaleElementReferenceException:
-            self.print('StaleElementReferenceException occurred, but likely button still was pressed')
-        except:
-            self.print('Unable to click submit button. Attempting secondary click method...')
-
-        if not status:
-            # secondary click method, if first not successful
+        if method == 1:
             try:
                 button.click()
                 status = True
+            except StaleElementReferenceException:
+                self.print('StaleElementReferenceException occurred, but likely button still was pressed')
             except:
+                self.print('Unable to click submit button. Attempting another click...')
+
+        elif method == 2:
+            try:
                 self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 self._driver.execute_script("arguments[0].click();", button)
-                self.confirm_submission()
+                status = True
+            except:
+                self.print('Unable to perform secondary click method! Could not enter giveaway')
+
+        return status
+
+    def click_button(self, button):
+
+        status = self.click_button_impl(button)
+        if not status:
+            status = self.click_button_impl(button, 2)
 
         if status:
             self.confirm_submission()
@@ -241,6 +248,7 @@ class GiveawayEntry:
                 self._driver.quit()
         except:
             self.print('Driver could not be quit!')
+
 
 # Generic entry class for First name, Last name, email fields
 class FirstLastEmailGiveawayEntry(GiveawayEntry):
@@ -323,6 +331,7 @@ class LeitesCulinariaEntry(GiveawayEntry):
 
         submitted = self.submit_from_textbox('giveaway_entry_email')
 
+        # TODO: check for number of entries so far and don't skip if less than max entries
         if not LeitesCulinariaEntry.extra_entered and (LeitesCulinariaEntry.num_extra_entries < 2):
             LeitesCulinariaEntry.extra_entered = True
             self.fill_textbox('input_2920_1', person.full_name)
