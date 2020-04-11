@@ -4,7 +4,9 @@ from selenium.webdriver.chrome.options import Options
 import time
 import random
 import sys
-
+import requests
+from bs4 import BeautifulSoup
+import itertools
 
 # create giveaway entry class
 from selenium.common.exceptions import StaleElementReferenceException
@@ -100,6 +102,11 @@ class GiveawayEntry:
         else:
             return True
 
+    def getSoup(self, link):
+        html = requests.get(link).text
+        soup = BeautifulSoup(html, "html.parser")
+        return soup
+
     def init_driver(self):
 
         init_status = True
@@ -132,7 +139,48 @@ class GiveawayEntry:
             return False
         
         #  TODO: span.mv_close_button.mv_unbutton
-        
+
+        # Attempt to close any ads on the page that might prevent fields to fill
+        try:
+            popmake_close_element = self._driver.find_element_by_class_name('pum-close')
+            popmake_close_element.click()
+        except:
+            self.print('Unable to find any popmake popups using this method 1')
+
+        if True:
+            try:
+                all_iframes = self._driver.find_elements_by_tag_name("iframe")
+                if len(all_iframes) > 0:
+                    print("Ad Found\n")
+                    self._driver.execute_script("""
+                        var elems = document.getElementsByTagName("iframe"); 
+                        for(var i = 0, max = elems.length; i < max; i++)
+                             {
+                                 elems[i].hidden=true;
+                             }
+                                          """)
+                    print('Total Ads: ' + str(len(all_iframes)))
+                else:
+                    print('No frames found')
+            except:
+                self.print('Unable to find any popmake popups using this method 2')
+
+        # Again Attempt to close any ads on the page that might prevent fields to fill
+        try:
+            popmake_close_element = self._driver.find_element_by_class_name('pum-close')
+            popmake_close_element.click()
+        except:
+            self.print('Unable to find any popmake popups using this method 1')
+
+        if False:
+            try:
+                soup = self.getSoup(self.url)
+                popmake_close_button_element = soup.findAll("button", {"aria-label": "Close"})
+                xpath = self.xpath_soup(popmake_close_button_element)
+                selenium_element = self._driver.find_element_by_xpath(xpath)
+            except:
+                self.print('Unable to find any popmake popups using this method 3')
+
         try:
             self.humanDelay.apply()
             return True
@@ -142,7 +190,26 @@ class GiveawayEntry:
     def print(self, some_str):
         print('\t' + some_str)
 
-    
+    def xpath_soup(self, element):
+        """
+        Generate xpath of soup element
+        :param element: bs4 text or node
+        :return: xpath as string
+        """
+        components = []
+        child = element if element.name else element.parent
+        for parent in child.parents:
+            """
+            @type parent: bs4.element.Tag
+            """
+            previous = itertools.islice(parent.children, 0, parent.contents.index(child))
+            xpath_tag = child.name
+            xpath_index = sum(1 for i in previous if i.name == xpath_tag) + 1
+            components.append(xpath_tag if xpath_index == 1 else '%s[%d]' % (xpath_tag, xpath_index))
+            child = parent
+        components.reverse()
+        return '/%s' % '/'.join(components)
+
     def fill_textbox(self, text_id, text_str):
 
         filled = False
@@ -215,6 +282,7 @@ class GiveawayEntry:
 
         return status
 
+    # TODO: generalize this because submit is not the only buton that can be clicked
     def click_button(self, button):
 
         status = self.click_button_impl(button)
@@ -260,9 +328,12 @@ class FirstLastEmailGiveawayEntry(GiveawayEntry):
     # Fill and submit process
     def fill_and_submit(self, person):
         # Fill form
-        self.fill_textbox(self.first_name_id, person.first_name)
-        self.fill_textbox(self.last_name_id, person.last_name)
-        self.fill_textbox(self.email_id, person.email)
+        filled_first_name = self.fill_textbox(self.first_name_id, person.first_name)
+        filled_last_name = self.fill_textbox(self.last_name_id, person.last_name)
+        filled_email = self.fill_textbox(self.email_id, person.email)
+
+        if not filled_first_name or not filled_last_name or not filled_email:
+            return False
 
         # Submit form
         found_submit = False

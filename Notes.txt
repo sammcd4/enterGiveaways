@@ -1,0 +1,2 @@
+<button type="button" class="pum-close popmake-close" aria-label="Close">
+CLOSE </button>
