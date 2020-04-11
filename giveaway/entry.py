@@ -45,7 +45,8 @@ class GiveawayEntry:
     actually_enter = True
     noDelay = False
     _driver = None
-    useHeadless = True
+    useHeadless = False
+    ads_removed = [False, False]
     # TODO: Read from a config file for all these hardcoded settings
 
     # Constructor
@@ -63,6 +64,8 @@ class GiveawayEntry:
         self.expiration_date = expiration_date
         self.rating = int(rating)
         self.num_entries = num_entries
+
+        self.ads_removed = [False, False]
 
         # convert expiration date to datetime format
         [y, m, d] = expiration_date.split('-')
@@ -145,41 +148,10 @@ class GiveawayEntry:
             popmake_close_element = self._driver.find_element_by_class_name('pum-close')
             popmake_close_element.click()
         except:
-            self.print('Unable to find any popmake popups using this method 1')
+            self.print('Unable to find any popmake popups')
 
-        if True:
-            try:
-                all_iframes = self._driver.find_elements_by_tag_name("iframe")
-                if len(all_iframes) > 0:
-                    print("Ad Found\n")
-                    self._driver.execute_script("""
-                        var elems = document.getElementsByTagName("iframe"); 
-                        for(var i = 0, max = elems.length; i < max; i++)
-                             {
-                                 elems[i].hidden=true;
-                             }
-                                          """)
-                    print('Total Ads: ' + str(len(all_iframes)))
-                else:
-                    print('No frames found')
-            except:
-                self.print('Unable to find any popmake popups using this method 2')
-
-        # Again Attempt to close any ads on the page that might prevent fields to fill
-        try:
-            popmake_close_element = self._driver.find_element_by_class_name('pum-close')
-            popmake_close_element.click()
-        except:
-            self.print('Unable to find any popmake popups using this method 1')
-
-        if False:
-            try:
-                soup = self.getSoup(self.url)
-                popmake_close_button_element = soup.findAll("button", {"aria-label": "Close"})
-                xpath = self.xpath_soup(popmake_close_button_element)
-                selenium_element = self._driver.find_element_by_xpath(xpath)
-            except:
-                self.print('Unable to find any popmake popups using this method 3')
+        self.remove_ads()
+        self.remove_ads()
 
         try:
             self.humanDelay.apply()
@@ -190,25 +162,37 @@ class GiveawayEntry:
     def print(self, some_str):
         print('\t' + some_str)
 
-    def xpath_soup(self, element):
-        """
-        Generate xpath of soup element
-        :param element: bs4 text or node
-        :return: xpath as string
-        """
-        components = []
-        child = element if element.name else element.parent
-        for parent in child.parents:
-            """
-            @type parent: bs4.element.Tag
-            """
-            previous = itertools.islice(parent.children, 0, parent.contents.index(child))
-            xpath_tag = child.name
-            xpath_index = sum(1 for i in previous if i.name == xpath_tag) + 1
-            components.append(xpath_tag if xpath_index == 1 else '%s[%d]' % (xpath_tag, xpath_index))
-            child = parent
-        components.reverse()
-        return '/%s' % '/'.join(components)
+    def remove_ads(self):
+        if not self.ads_removed[0]:
+            self.ads_removed[0] = self.remove_ads_iframe()
+
+        if not self.ads_removed[1]:
+            # Attempt to close any ads on the page that might prevent fields to fill
+            try:
+                popmake_close_element = self._driver.find_element_by_class_name('pum-close')
+                popmake_close_element.click()
+                self.ads_removed[1] = True
+            except:
+                self.print('Unable to find any popmake popups')
+
+    def remove_ads_iframe(self):
+        ad_removed = False
+        try:
+            all_iframes = self._driver.find_elements_by_tag_name("iframe")
+            if len(all_iframes) > 0:
+                #print("Ad Found")
+                self._driver.execute_script("""
+                    var elems = document.getElementsByTagName("iframe"); 
+                    for(var i = 0, max = elems.length; i < max; i++)
+                         {
+                             elems[i].hidden=true;
+                         }
+                                      """)
+                #print('Total Ads: ' + str(len(all_iframes)))
+            ad_removed = True
+        except:
+            self.print('Unable to find any iframe ads')
+        return ad_removed
 
     def fill_textbox(self, text_id, text_str):
 
