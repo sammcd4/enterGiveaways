@@ -46,7 +46,7 @@ class GiveawayEntry:
     actually_enter = True
     no_delay = False
     _driver = None
-    use_headless = False
+    use_headless = True
     ads_removed = [False, False]
     # TODO: Read from a config file for all these hardcoded settings
 
@@ -159,10 +159,7 @@ class GiveawayEntry:
         
         #  TODO: span.mv_close_button.mv_unbutton
 
-        # add sleep just in case it helps to load the web page more consistently
-
-        self.remove_ads()
-        #self.remove_ads(5)
+        self.remove_iframe_ads()
 
         # TODO: internalize error handling for human delay
         try:
@@ -174,26 +171,12 @@ class GiveawayEntry:
     def print(self, some_str):
         print('\t' + some_str)
 
-    def remove_ads(self, sleep_time=0):
+    def remove_iframe_ads(self):
 
-        if sleep_time > 0:
-            self.print("Sleeping for {} seconds...setup to remove ads".format(sleep_time))
-        time.sleep(sleep_time)
+        # exit early if ads are already removed
+        if self.ads_removed[0]:
+            return
 
-        if not self.ads_removed[0]:
-            self.ads_removed[0] = self.remove_ads_iframe()
-
-        if not self.ads_removed[1]:
-            # Attempt to close any ads on the page that might prevent fields to fill
-            try:
-                popmake_close_element = self._driver.find_element_by_class_name('pum-close')
-                popmake_close_element.click()
-                self.ads_removed[1] = True
-            except:
-                self.print('Unable to find any popmake popups')
-
-    def remove_ads_iframe(self):
-        ad_removed = False
         try:
             all_iframes = self._driver.find_elements_by_tag_name("iframe")
             if len(all_iframes) > 0:
@@ -204,10 +187,9 @@ class GiveawayEntry:
                              elems[i].hidden=true;
                          }
                                       """)
-            ad_removed = True
+            self.ads_removed[0] = True
         except:
             self.print('Unable to find any iframe ads')
-        return ad_removed
 
     def fill_textbox(self, text_id, text_str):
 
@@ -366,6 +348,28 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
         self.last_name_id = 'skg_last_name'
         self.email_id = 'skg_email'
         self.submit_button_id = 'skg_submit_button'
+
+    def init_driver(self):
+        status = super().init_driver()
+
+        self.remove_sk_ads(10)
+
+        return status
+
+    def remove_sk_ads(self, sleep_time=0):
+
+        if sleep_time > 0:
+            self.print("Sleeping for {} seconds...setup to remove ads".format(sleep_time))
+        time.sleep(sleep_time)
+
+        if not self.ads_removed[1]:
+            # Attempt to close any ads on the page that might prevent fields to fill
+            try:
+                popmake_close_element = self._driver.find_element_by_class_name('pum-close')
+                popmake_close_element.click()
+                self.ads_removed[1] = True
+            except:
+                self.print('Unable to find any popmake popups')
 
     def confirm_submission(self):
         super().confirm_submission()
