@@ -10,14 +10,14 @@ class GiveawayEntrant:
     today = ''
     delay = 15  # seconds of delay between giveaway entries
     delay_noise = 5  # seconds of delay noise (magnitude of randomization)
-    noDelay = False
+    no_delay = False
 
     def __init__(self, url_file, person):
         self.person = person
         from datetime import date
         import os
 
-        if self.noDelay:
+        if self.no_delay:
             self.delay = 0
             self.delay_noise = 0
 
@@ -75,9 +75,9 @@ class GiveawayEntrant:
             writefile = open(entered_filename, 'a')
 
             g.enter_giveaway(self.person)
-            if not g.noDelay:
+            if not g.no_delay:
                 time.sleep(self.delay + self.delay_noise * random.random())
-            if g.isEntered:
+            if g.is_entered:
                 print('\tWriting to {}'.format(entered_filename))
                 writefile.write('{}\n'.format(g.url))
 
@@ -109,6 +109,7 @@ def bulk_operation():
     with open('GiveawayInfo.txt', 'r') as f:
         data = f.readlines()
 
+    # TODO: limit amount of time .entered file is open
     for f in data:
         print(f)
 

@@ -7,6 +7,7 @@ import sys
 import requests
 from bs4 import BeautifulSoup
 import itertools
+import json
 
 # create giveaway entry class
 from selenium.common.exceptions import StaleElementReferenceException
@@ -15,7 +16,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 class HumanizedDelay:
 
     def __init__(self):
-        self._delay = 3.0  # nominal delay value in seconds
+        self._delay = 2.0  # nominal delay value in seconds
         self.noise = 2.0
 
     def apply(self):
@@ -34,27 +35,29 @@ class HumanizedDelay:
 
 class GiveawayEntry:
     url = ''
-    isEntered = False
+    is_entered = False
     today = ''
     expiration_date = ''
     rating = 10
     expiration_datetime = ''
     entered_date = ''
-    humanDelay = HumanizedDelay()
-    isValid = False
+    human_delay = HumanizedDelay()
+    is_valid = False
     actually_enter = True
-    noDelay = False
+    no_delay = False
     _driver = None
-    useHeadless = False
+    use_headless = False
     ads_removed = [False, False]
     # TODO: Read from a config file for all these hardcoded settings
+
+    # TODO: log all successful or unsuccessful attempts
 
     # Constructor
     def __init__(self, url, expiration_date, rating, num_entries=1):
         from datetime import date
 
-        if self.noDelay:
-            self.humanDelay.apply = 0
+        if self.no_delay:
+            self.human_delay.apply = 0
 
         # get today's date
         today = date.today()
@@ -72,12 +75,12 @@ class GiveawayEntry:
         self.expiration_datetime = date(int(y), int(m), int(d))
 
         if today <= self.expiration_datetime:
-            self.isValid = True
+            self.is_valid = True
 
     # Enter Giveaway method
     def enter_giveaway(self, person):
         print(person.first_name + ' has opened ' + self.url)
-        if not self.isValid:
+        if not self.is_valid:
             self.print('Giveaway has expired')
             # TODO: Need to automatically remove giveaway info from txt
 
@@ -88,9 +91,10 @@ class GiveawayEntry:
                 if self.num_entries > 1:
                     self.print('Entry # {}'.format(i+1))
 
-                # Open web page and begin entry process
+                # Open web page and begin entry process (try twice)
                 if not self.init_driver():
-                    return
+                    if not self.init_driver():
+                        return
 
                 if not self.fill_and_submit(person):
                     return
@@ -115,7 +119,7 @@ class GiveawayEntry:
         init_status = True
         try:
 
-            if self.useHeadless:
+            if self.use_headless:
                 chrome_options = Options()
                 # chrome_options.add_argument("--disable-extensions")
                 if 'win' in sys.platform:
@@ -134,27 +138,35 @@ class GiveawayEntry:
             self.close_driver()
             return False
 
+        get_status = False
         try:
             self._driver.get(self.url)
+            get_status = True
         except:
             self.print('Unable to call driver.get({})! Investigate any changes to webpage'.format(self.url))
-            self.close_driver()
+
+        # Attempt 2 for driver.get
+        if not get_status:
+            try:
+                self._driver.get(self.url)
+                get_status = True
+            except:
+                self.print('Unable to call driver.get({})! Investigate any changes to webpage'.format(self.url))
+                self.close_driver()
+
+        if not get_status:
             return False
         
         #  TODO: span.mv_close_button.mv_unbutton
 
-        # Attempt to close any ads on the page that might prevent fields to fill
-        try:
-            popmake_close_element = self._driver.find_element_by_class_name('pum-close')
-            popmake_close_element.click()
-        except:
-            self.print('Unable to find any popmake popups')
+        # add sleep just in case it helps to load the web page more consistently
 
         self.remove_ads()
-        self.remove_ads()
+        #self.remove_ads(5)
 
+        # TODO: internalize error handling for human delay
         try:
-            self.humanDelay.apply()
+            self.human_delay.apply()
             return True
         except:
             self.print('Unable to apply delay. Consider updating the HumanizedDelay class ')
@@ -162,7 +174,12 @@ class GiveawayEntry:
     def print(self, some_str):
         print('\t' + some_str)
 
-    def remove_ads(self):
+    def remove_ads(self, sleep_time=0):
+
+        if sleep_time > 0:
+            self.print("Sleeping for {} seconds...setup to remove ads".format(sleep_time))
+        time.sleep(sleep_time)
+
         if not self.ads_removed[0]:
             self.ads_removed[0] = self.remove_ads_iframe()
 
@@ -180,7 +197,6 @@ class GiveawayEntry:
         try:
             all_iframes = self._driver.find_elements_by_tag_name("iframe")
             if len(all_iframes) > 0:
-                #print("Ad Found")
                 self._driver.execute_script("""
                     var elems = document.getElementsByTagName("iframe"); 
                     for(var i = 0, max = elems.length; i < max; i++)
@@ -188,7 +204,6 @@ class GiveawayEntry:
                              elems[i].hidden=true;
                          }
                                       """)
-                #print('Total Ads: ' + str(len(all_iframes)))
             ad_removed = True
         except:
             self.print('Unable to find any iframe ads')
@@ -203,7 +218,7 @@ class GiveawayEntry:
             filled = True
         except:
             self.print('Unable to fill {} textbox with {}'.format(text_id, text_str))
-        self.humanDelay.apply()
+        self.human_delay.apply()
         return filled
 
     def fill_textbox_and_submit(self, text_id, text_str):
@@ -278,13 +293,13 @@ class GiveawayEntry:
 
     def confirm_submission(self):
         # pause for short time to manually verify submission, if desired
-        if not self.noDelay:
+        if not self.no_delay:
             time.sleep(5)
 
         # TODO: Verify submission with expected webpage loading after submission
         # will be specific for each entry
 
-        self.isEntered = True
+        self.is_entered = True
         self.print('Entered Giveaway')
 
     def close_driver(self):
