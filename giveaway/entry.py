@@ -150,6 +150,7 @@ class GiveawayEntry:
             try:
                 self._driver.get(self.url)
                 get_status = True
+                self.print('Successfully called driver.get({})'.format(self.url))
             except:
                 self.print('Unable to call driver.get({})! Investigate any changes to webpage'.format(self.url))
                 self.close_driver()
@@ -238,7 +239,8 @@ class GiveawayEntry:
         if not self.actually_enter:
             self.print('Simulating submission')
         else:
-            self.click_button(button)
+            if self.click_button(button):
+                self.confirm_submission()
 
         self.close_driver()
 
@@ -255,7 +257,7 @@ class GiveawayEntry:
 
         elif method == 2:
             try:
-                self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                #self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 self._driver.execute_script("arguments[0].click();", button)
                 status = True
             except:
@@ -263,26 +265,25 @@ class GiveawayEntry:
 
         return status
 
-    # TODO: generalize this because submit is not the only buton that can be clicked
     def click_button(self, button):
-
         status = self.click_button_impl(button)
         if not status:
             status = self.click_button_impl(button, 2)
 
-        if status:
-            self.confirm_submission()
+        return status
 
     def confirm_submission(self):
         # pause for short time to manually verify submission, if desired
         if not self.no_delay:
             time.sleep(5)
 
-        # TODO: Verify submission with expected webpage loading after submission
-        # will be specific for each entry
+        self.is_entered = self.confirm_submission_page()
+        if self.is_entered:
+            self.print('Entered Giveaway')
 
-        self.is_entered = True
-        self.print('Entered Giveaway')
+    # real implementation is in child classes
+    def confirm_submission_page(self):
+        return True
 
     def close_driver(self):
 
@@ -352,7 +353,7 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
     def init_driver(self):
         status = super().init_driver()
 
-        self.remove_sk_ads(10)
+        self.remove_sk_ads(3)
 
         return status
 
@@ -371,10 +372,11 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
             except:
                 self.print('Unable to find any popmake popups')
 
-    def confirm_submission(self):
-        super().confirm_submission()
+    def confirm_submission_page(self):
         # https://steamykitchen.com/giveaway-confirmation
         # TODO: at least verify that new webpage is correct
+        self.print('Confirm submission page')
+        return True
 
 
 # Entry class for GlutenFree.com giveaways
@@ -387,8 +389,8 @@ class GlutenFreeEntry(FirstLastEmailGiveawayEntry):
         self.email_id = 'input_1_3'
         self.submit_button_id = 'gform_submit_button_1'
 
-    def confirm_submission(self):
-        super().confirm_submission()
+    def confirm_submission_page(self):
+        return True
 
 
 # Entry class for LeitesCulinaria.com giveaways
@@ -408,14 +410,14 @@ class LeitesCulinariaEntry(GiveawayEntry):
         # TODO: check for number of entries so far and don't skip if less than max entries
         if not LeitesCulinariaEntry.extra_entered and (LeitesCulinariaEntry.num_extra_entries < 2):
             LeitesCulinariaEntry.extra_entered = True
-            self.fill_textbox('input_2920_1', person.full_name)
-            self.fill_textbox('input_2920_2', person.email)
-            self.submit_from_textbox('input_2920_2')
+            self.fill_textbox('input_2924_1', person.full_name)
+            self.fill_textbox('input_2924_2', person.email)
+            self.submit_from_textbox('input_2924_2')
             LeitesCulinariaEntry.num_extra_entries += 1
 
         if submitted:
             self.confirm_submission()
         self.close_driver()
 
-    def confirm_submission(self):
-        super().confirm_submission()
+    def confirm_submission_page(self):
+        return True
