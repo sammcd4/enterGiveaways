@@ -43,10 +43,10 @@ class GiveawayEntry:
     entered_date = ''
     human_delay = HumanizedDelay()
     is_valid = False
-    actually_enter = True
+    actually_enter = False
     no_delay = False
     _driver = None
-    use_headless = True
+    use_headless = False
     ads_removed = [False, False]
     # TODO: Read from a config file for all these hardcoded settings
 
@@ -266,9 +266,9 @@ class GiveawayEntry:
         return status
 
     def click_button(self, button):
-        status = self.click_button_impl(button)
+        status = self.click_button_impl(button, 2)
         if not status:
-            status = self.click_button_impl(button, 2)
+            status = self.click_button_impl(button, 1)
 
         return status
 
@@ -345,9 +345,9 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
     def __init__(self, url, expiration_date, rating, num_entries=1):
         # Fill form
         super().__init__(url, expiration_date, rating, num_entries)
-        self.first_name_id = 'skg_first_name'
-        self.last_name_id = 'skg_last_name'
-        self.email_id = 'skg_email'
+        self.first_name_id = 'first_name'
+        self.last_name_id = 'last_name'
+        self.email_id = 'email'
         self.submit_button_id = 'skg_submit_button'
 
     def init_driver(self):
