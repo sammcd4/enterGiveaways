@@ -48,6 +48,8 @@ class GiveawayEntry:
     _driver = None
     use_headless = False
     ads_removed = [False, False]
+    use_chrome = True
+    automate_entry = False
     # TODO: Read from a config file for all these hardcoded settings
 
     # TODO: log all successful or unsuccessful attempts
@@ -118,20 +120,29 @@ class GiveawayEntry:
 
         init_status = True
         try:
-
-            if self.use_headless:
+            if self.use_chrome:
                 chrome_options = Options()
-                # chrome_options.add_argument("--disable-extensions")
-                if 'win' in sys.platform:
-                    chrome_options.add_argument("--disable-gpu")
+                chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+                chrome_options.add_experimental_option('useAutomationExtension', False)
+                chrome_options.add_argument("--incognito")
+                #chrome_options.add_argument("—disable-infobars")
+                if self.use_headless:
+                    # chrome_options.add_argument("--disable-extensions")
+                    if 'win' in sys.platform:
+                        chrome_options.add_argument("--disable-gpu")
 
-                if 'linux' in sys.platform:
-                    chrome_options.add_argument("--no-sandbox")
+                    if 'linux' in sys.platform:
+                        chrome_options.add_argument("--no-sandbox")
 
-                chrome_options.add_argument("--headless")
-                self._driver = webdriver.Chrome(options=chrome_options)
+                    chrome_options.add_argument("--headless")
+                    self._driver = webdriver.Chrome(options=chrome_options)
+                else:
+                    chrome_options.headless = False
+                    self._driver = selenium.webdriver.Chrome(options=chrome_options)
             else:
-                self._driver = selenium.webdriver.Chrome()
+                options = Options()
+                options.headless = self.use_headless
+                self._driver = webdriver.Firefox()
 
         except:
             self.print('Unable to initialize webpage! Consider updating the webdriver')
@@ -160,7 +171,7 @@ class GiveawayEntry:
         
         #  TODO: span.mv_close_button.mv_unbutton
 
-        self.remove_iframe_ads()
+        #self.remove_iframe_ads()
 
         # TODO: internalize error handling for human delay
         try:
@@ -353,7 +364,7 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
     def init_driver(self):
         status = super().init_driver()
 
-        self.remove_sk_ads(3)
+        #self.remove_sk_ads(3)
 
         return status
 
