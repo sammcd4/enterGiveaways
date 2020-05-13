@@ -1,5 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
+import re
+import urllib
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 class GiveawayGatherer:
@@ -10,6 +14,9 @@ class GiveawayGatherer:
     def __init__(self, file_url):
         self.file_url = file_url
 
+    def has_icon_calendar_class(self, tag):
+        return tag.has_attr('class') and not tag.has_attr('id')
+
     def gather(self):
         print('Gathering all new giveaways from Steamy Kitchen...')
         giveaway_page = 'https://steamykitchen.com/current-giveaways'
@@ -19,7 +26,7 @@ class GiveawayGatherer:
         # print(current_giveaway_data)
 
         soup = self.getSoup(giveaway_page)
-        giveaway_posts = soup.findAll("div", {"class": "item skg-archive-post"})
+        giveaway_posts = soup.findAll("div", {"class": "item archive-post"})
 
         with open(self.file_url, 'a') as file:
 
@@ -29,6 +36,44 @@ class GiveawayGatherer:
 
                 # extract giveaway expiration from webpage with another soup
                 soup_giveaway = self.getSoup(giveaway_link)
+                giveaway_html = self.getHTML(giveaway_link)
+
+                options = Options()
+                options.headless = True
+                driver = webdriver.Chrome(options=options)
+                driver.get(giveaway_link)
+
+                # TODO Seems like the only way to scrub the page for calendar dates is to:
+                # 1. Identify the name of the frame and url
+                # 2. navigate to that frame and url
+                # 3. Extract that page html src or run beautiful soup there
+                # 4. Find the tag associated with class: 'icon-calendar'
+                # 5. Extract the calendar date
+
+                # This will get the initial html - before javascript
+                html1 = driver.page_source
+
+                with open('giveaway.html', 'w') as f:
+                    f.write(html1)
+
+                #giveaway_html = giveaway_html.split('\n')
+
+                #req = urllib.request.Request(giveaway_link)
+                #resp = urllib.request.urlopen(req)
+                #respData = resp.read()
+                #paragraphs = re.findall(r'icon-calendar', str(respData))
+
+                if 'icon-calendar' in giveaway_html:
+                    print('found it')
+
+                footer_sections = soup_giveaway.findAll("div", {'class': "footer"})
+                for footer in footer_sections:
+                    date_section4 = footer.find_all("i", {'class': 'icon-calendar'})
+
+                date_section5 = soup_giveaway.find_all(re.compile('icon-calendar'))
+                date_section = soup_giveaway.findAll(attrs={'class': "icon-calendar"})
+                date_section3 = soup_giveaway.find_all("i", {'class': "icon-calendar"})
+                date_section2 = soup_giveaway.find_all("div", class_="icon-calendar")
 
                 form = soup_giveaway.findAll("div", {'id': 'skg-meta'})
                 # form = soup_giveaway.find_all("div", {'class': 'skg-submission-form'})
@@ -65,6 +110,9 @@ class GiveawayGatherer:
 
         #for link in soup.find_all('a'):
         #   print(link.get('href'))
+
+    def getHTML(self, link):
+        return requests.get(link).text
 
     def getSoup(self, link):
         html = requests.get(link).text

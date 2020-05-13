@@ -46,10 +46,10 @@ class GiveawayEntry:
     actually_enter = False
     no_delay = False
     _driver = None
-    use_headless = False
+    use_headless = True
     ads_removed = [False, False]
     use_chrome = True
-    automate_entry = False
+    automate_entry = True
     # TODO: Read from a config file for all these hardcoded settings
 
     # TODO: log all successful or unsuccessful attempts
