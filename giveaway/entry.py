@@ -8,6 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 import itertools
 import json
+import giveaway.gather as gg
 
 # create giveaway entry class
 from selenium.common.exceptions import StaleElementReferenceException
@@ -46,7 +47,7 @@ class GiveawayEntry:
     actually_enter = False
     no_delay = False
     _driver = None
-    use_headless = True
+    use_headless = False
     ads_removed = [False, False]
     use_chrome = True
     automate_entry = True
@@ -354,8 +355,11 @@ class FirstLastEmailGiveawayEntry(GiveawayEntry):
 # Entry class for SteamyKitchen.com giveaways
 class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
     def __init__(self, url, expiration_date, rating, num_entries=1):
+
         # Fill form
         super().__init__(url, expiration_date, rating, num_entries)
+
+        # define ids
         self.first_name_id = 'first_name'
         self.last_name_id = 'last_name'
         self.email_id = 'email'
@@ -364,9 +368,34 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
     def init_driver(self):
         status = super().init_driver()
 
+        driver = webdriver.Chrome()
+        driver.get(self.url)
+        p_element = driver.find_elements_by_xpath('//*[contains(@id, \'vs_widget\')]')
+        src_link = p_element[0].get_attribute('src')
+        # print(src_link)
+
+        # swap webdrivers
+        self._orig_driver = self._driver
+        self._driver = driver
+
+        if False:
+            # swap urls
+            self.orig_url = self.url
+            self.url = src_link
+
         #self.remove_sk_ads(3)
 
         return status
+
+    def deselect_subscribe_checkbox(self):
+        # should have the correct driver already before calling this method
+        # first determine whether the checkbox is selected/deselected
+        # Either toggle if selected or explicitly deselect checkbox
+        pass
+
+    def enter_giveaway_with_enter(self):
+        # need to specialize how the giveaway is entered, just like leites does
+        pass
 
     def remove_sk_ads(self, sleep_time=0):
 
@@ -388,6 +417,13 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
         # TODO: at least verify that new webpage is correct
         self.print('Confirm submission page')
         return True
+
+    def close_driver(self):
+        # close the driver under use
+        super().close_driver()
+
+        # close the original driver as well
+        self._orig_driver.close()
 
 
 # Entry class for GlutenFree.com giveaways

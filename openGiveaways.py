@@ -3,6 +3,7 @@ import time
 import os
 import random
 
+
 def open_incognito_tab(url):
     system_command = "open -na \"Google Chrome\" --args -incognito {}".format(url)
     #print(system_command)
