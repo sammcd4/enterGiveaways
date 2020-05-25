@@ -368,11 +368,18 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
     def init_driver(self):
         status = super().init_driver()
 
-        driver = webdriver.Chrome()
-        driver.get(self.url)
-        p_element = driver.find_elements_by_xpath('//*[contains(@id, \'vs_widget\')]')
+        #driver = webdriver.Chrome()
+        #driver.get(self.url)
+        p_element = self._driver.find_elements_by_xpath('//*[contains(@id, \'vs_widget\')]')
         src_link = p_element[0].get_attribute('src')
         # print(src_link)
+
+        # init new webdriver for javascript generated page
+        # TODO: create a helper to generate chrome options to use here as well as the main page
+        chrome_options = Options()
+        chrome_options.headless = self.use_headless
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.get(src_link)
 
         # swap webdrivers
         self._orig_driver = self._driver
@@ -386,6 +393,38 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
         #self.remove_sk_ads(3)
 
         return status
+
+    # fill and submit specific to Steamy Kitchen giveaways
+    def fill_and_submit(self, person):
+
+        # TODO: generalize this process with a submit by textbox flag rather than an entirely different process
+        # Fill form
+        self.fill_textbox(self.first_name_id, person.first_name)
+        self.fill_textbox(self.last_name_id, person.last_name)
+        self.fill_textbox(self.email_id, person.email)
+
+        submitted = self.submit_from_textbox(self.email_id)
+
+        if submitted:
+            self.confirm_submission()
+        self.close_driver()
+
+        # additionally, close original pages webdriver
+        self.close_orig_driver()
+
+    def close_orig_driver(self):
+
+        try:
+            if self._orig_driver is not None:
+                self._orig_driver.close()
+        except:
+            self.print('Orig Web page could not be closed!')
+
+        try:
+            if self._orig_driver is not None:
+                self._orig_driver.quit()
+        except:
+            self.print('Orig Driver could not be quit!')
 
     def deselect_subscribe_checkbox(self):
         # should have the correct driver already before calling this method
