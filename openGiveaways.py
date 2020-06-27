@@ -11,7 +11,7 @@ def open_incognito_tab(url):
 
 
 if __name__ == "__main__":
-    use_incognito = False
+    use_incognito = True
     giveaway_info = 'GiveawayInfo.txt'
     with open(giveaway_info, 'r') as f:
         for line in f:
