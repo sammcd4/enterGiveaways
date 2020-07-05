@@ -21,13 +21,14 @@ if __name__ == "__main__":
                 print('Due to rating of {}/10 skipping {}'.format(int(rating), url))
                 continue
 
-            url = line[line.find('http'):]
-            print('Opening {}'.format(url))
-            if use_incognito:
-                #chrome_path = 'open -na /Applications/Google\ Chrome.app %s --args -incognito'
-                #webbrowser.get(chrome_path).open_new_tab(url)
+            for i in range(int(num_entries)):
+                url = line[line.find('http'):]
+                print('Opening {}'.format(url))
+                if use_incognito:
+                    #chrome_path = 'open -na /Applications/Google\ Chrome.app %s --args -incognito'
+                    #webbrowser.get(chrome_path).open_new_tab(url)
 
-                open_incognito_tab(url)
-            else:
-                webbrowser.open_new_tab(url)
-            time.sleep(15)
+                    open_incognito_tab(url)
+                else:
+                    webbrowser.open_new_tab(url)
+                time.sleep(10)

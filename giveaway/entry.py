@@ -181,8 +181,9 @@ class GiveawayEntry:
         except:
             self.print('Unable to apply delay. Consider updating the HumanizedDelay class ')
         
-    def print(self, some_str):
-        print('\t' + some_str)
+    def print(self, *args):
+        print('\t', end="")
+        print(*args)
 
     def remove_iframe_ads(self):
 

@@ -12,7 +12,10 @@ def get_iframe_link(giveaway_link):
     driver.get(giveaway_link)
     # p_element = driver.find_element_by_id(id_='vs_widget')
     p_element = driver.find_elements_by_xpath('//*[contains(@id, \'vs_widget\')]')
-    src_link = p_element[0].get_attribute('src')
+    try:
+        src_link = p_element[0].get_attribute('src')
+    except:
+        print('Unable to get src attribute from iframe link')
     print(src_link)
 
     # cleanup webdriver
