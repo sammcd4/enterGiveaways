@@ -12,11 +12,12 @@ def get_iframe_link(giveaway_link):
     driver.get(giveaway_link)
     # p_element = driver.find_element_by_id(id_='vs_widget')
     p_element = driver.find_elements_by_xpath('//*[contains(@id, \'vs_widget\')]')
+    src_link = ''
     try:
         src_link = p_element[0].get_attribute('src')
+        print(src_link)
     except:
         print('Unable to get src attribute from iframe link')
-    print(src_link)
 
     # cleanup webdriver
     driver.close()
@@ -76,13 +77,16 @@ class GiveawayGatherer:
                 src_link = get_iframe_link(giveaway_link)
 
                 # extract expiration date from the embedded html
-                soup_src = self.getSoup(src_link)
-                date_section_actual = soup_src.find("i", {'class': 'icon-calendar'})
-                giveaway_ends = date_section_actual.next.text
-                ends_idx = giveaway_ends.find(' ')
-                giveaway_expiration_str = giveaway_ends[ends_idx+1:]
-                giveaway_expiration = datetime.datetime.strptime(giveaway_expiration_str, '%m-%d-%Y').strftime('%Y-%m-%d')
-
+                try:
+                    soup_src = self.getSoup(src_link)
+                    date_section_actual = soup_src.find("i", {'class': 'icon-calendar'})
+                    giveaway_ends = date_section_actual.next.text
+                    ends_idx = giveaway_ends.find(' ')
+                    giveaway_expiration_str = giveaway_ends[ends_idx+1:]
+                    giveaway_expiration = datetime.datetime.strptime(giveaway_expiration_str, '%m-%d-%Y').strftime('%Y-%m-%d')
+                except:
+                    print('Unable to extract expiration date from the embedded html')
+                    giveaway_expiration = 'no_expiration_found'
 
                 #options = Options()
                 #options.headless = True
