@@ -5,7 +5,8 @@ import urllib
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import datetime
-
+import time
+from datetime import date
 
 def get_iframe_link(giveaway_link):
     driver = webdriver.Chrome()
@@ -157,7 +158,12 @@ class GiveawayGatherer:
         #   print(link.get('href'))
 
     def getHTML(self, link):
-        return requests.get(link).text
+        text = ''
+        try:
+            text = requests.get(link).text
+        except:
+            print("Unable to get link text")
+        return text
 
     def getSoup(self, link):
         html = requests.get(link).text
