@@ -31,4 +31,4 @@ if __name__ == "__main__":
                     open_incognito_tab(url)
                 else:
                     webbrowser.open_new_tab(url)
-                time.sleep(10)
+                time.sleep(15)
