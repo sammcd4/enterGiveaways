@@ -11,6 +11,7 @@ class GiveawayEntrant:
     delay = 15  # seconds of delay between giveaway entries
     delay_noise = 5  # seconds of delay noise (magnitude of randomization)
     no_delay = False
+    able_to_automate_SK = False
 
     def __init__(self, url_file, person):
         self.person = person
@@ -55,7 +56,7 @@ class GiveawayEntrant:
             elif url_str in entered_data:
                 print('{} already entered {} today'.format(person.first_name, url_str))
             else:
-                if 'steamykitchen.com' in url_str:
+                if self.able_to_automate_SK and 'steamykitchen.com' in url_str:
                     print('{} Creating new SteamyKitchen giveaway for {}'.format(person.first_name, url_str))
                     self.giveaways.append(ge.SteamyKitchenEntry(url_str, expire_date, rating, num_entries))
                 elif 'leitesculinaria.com' in url_str:

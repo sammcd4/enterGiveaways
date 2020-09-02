@@ -44,7 +44,7 @@ class GiveawayEntry:
     entered_date = ''
     human_delay = HumanizedDelay()
     is_valid = False
-    actually_enter = False
+    actually_enter = True
     no_delay = False
     _driver = None
     use_headless = False
