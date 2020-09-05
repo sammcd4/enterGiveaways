@@ -8,7 +8,7 @@ class GiveawayEntrant:
     person = []
     giveaways = []
     today = ''
-    delay = 15  # seconds of delay between giveaway entries
+    delay = 10  # seconds of delay between giveaway entries
     delay_noise = 5  # seconds of delay noise (magnitude of randomization)
     no_delay = False
     able_to_automate_SK = False

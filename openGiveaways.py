@@ -17,6 +17,10 @@ if __name__ == "__main__":
         for line in f:
             [expire_date, rating, num_entries, url] = line.split(' ')
 
+            # skip any leitesculinaria giveaways, because they can be automated
+            if 'leites' in url:
+                continue
+
             if random.randint(1, 10) > int(rating):
                 print('Due to rating of {}/10 skipping {}'.format(int(rating), url))
                 continue
