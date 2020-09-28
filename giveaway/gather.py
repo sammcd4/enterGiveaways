@@ -8,6 +8,7 @@ import datetime
 import time
 from datetime import date
 
+
 def get_iframe_link(giveaway_link):
     driver = webdriver.Chrome()
     driver.get(giveaway_link)
