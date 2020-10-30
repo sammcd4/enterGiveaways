@@ -41,6 +41,64 @@ class GiveawayGatherer:
     def execute_js(self, script):
         return js2py.eval_js(script)
 
+    def gather_leites(self):
+        print('Gathering all new giveaways from Leites Culinaria...')
+        main_giveaway_page = 'https://leitesculinaria.com/category/giveaways'
+        soup = self.getSoup(main_giveaway_page)
+
+        # get number of pages
+        pages_elements = soup.findAll("div", {"class": "archive-description"})
+        # should just be one so get first
+        pages = pages_elements[0].find('p').findAll('a')
+        giveaway_pages = [page.get('href') for page in pages]
+        giveaway_pages.append(main_giveaway_page)
+        print(giveaway_pages)
+
+        # iterate over all pages of giveaways
+        for giveaway_page in giveaway_pages:
+
+            with open(self.file_url, 'r') as f:
+                current_giveaway_data = f.readlines()
+
+            giveaway_posts = soup.findAll("article", {"class": "post recipes"})
+
+            with open(self.file_url, 'a') as file:
+                for gp in giveaway_posts:
+                    giveaway_link = gp.find('div').find('a').get('href')
+                    #print(giveaway_link)
+
+                    # extract giveaway expiration from webpage with another soup
+                    soup_giveaway = self.getSoup(giveaway_link)
+
+                    entry_content = soup_giveaway.find('div', {"class": "entry-content"})
+                    expiration_date_str = soup_giveaway.body.findAll(text=re.compile('Deadline is'))
+
+                    expiration_date_str = str(expiration_date_str).replace('. Deadline is 11:59PM ET ', '')
+                    expiration_date_str = expiration_date_str.replace("['", "")
+                    expiration_date_str = expiration_date_str.replace(".']", "")
+                    #print(expiration_date_str)
+                    digits = expiration_date_str.split('.')
+                    #print(digits)
+
+                    giveaway_expiration = '20{}-{}-{}'.format(digits[2], digits[0], digits[1])
+
+                    # Now that giveaway info is found, write it to GiveawayInfo.txt
+                    # if giveaway_link in current_giveaway_data:
+                    if [i for i in current_giveaway_data if giveaway_link in i]:
+                        print("Old giveaway: {}".format(giveaway_link))
+                    else:
+                        # need to filter some of these before writing everything
+                        matches = ['oxo', 'ipad', 'set', 'cuisinart', 'all-clad', 'waffle', 'air-fryer', 'steak',
+                                   'calphalon']
+                        if any(x in giveaway_link for x in matches):
+                            print("New giveaway: {}".format(giveaway_link))
+
+                            # Construct and write string to file
+                            new_giveaway_line = giveaway_expiration + ' 5 1 ' + giveaway_link + '\n'
+                            print(new_giveaway_line)
+
+                            file.write(new_giveaway_line)
+
     def gather(self):
         print('Gathering all new giveaways from Steamy Kitchen...')
         giveaway_page = 'https://steamykitchen.com/current-giveaways'
@@ -174,7 +232,7 @@ class GiveawayGatherer:
 
 def gather():
     g = GiveawayGatherer('GiveawayInfo.txt')
-    g.gather()
+    g.gather_leites()
 
 
 if __name__ == '__main__':
