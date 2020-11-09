@@ -47,7 +47,7 @@ class GiveawayEntry:
     actually_enter = True
     no_delay = False
     _driver = None
-    use_headless = False
+    use_headless = True
     ads_removed = [False, False]
     use_chrome = True
     automate_entry = True
@@ -123,8 +123,8 @@ class GiveawayEntry:
         try:
             if self.use_chrome:
                 chrome_options = Options()
-                chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
-                chrome_options.add_experimental_option('useAutomationExtension', False)
+                #chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+                #chrome_options.add_experimental_option('useAutomationExtension', False)
                 chrome_options.add_argument("--incognito")
                 #chrome_options.add_argument("—disable-infobars")
                 if self.use_headless:

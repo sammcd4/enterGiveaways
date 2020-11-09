@@ -52,7 +52,7 @@ class GiveawayGatherer:
         pages = pages_elements[0].find('p').findAll('a')
         giveaway_pages = [page.get('href') for page in pages]
         giveaway_pages.append(main_giveaway_page)
-        print(giveaway_pages)
+        #print(giveaway_pages)
 
         # iterate over all pages of giveaways
         for giveaway_page in giveaway_pages:
@@ -233,6 +233,7 @@ class GiveawayGatherer:
 def gather():
     g = GiveawayGatherer('GiveawayInfo.txt')
     g.gather_leites()
+    g.gather()
 
 
 if __name__ == '__main__':
