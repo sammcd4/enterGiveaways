@@ -497,9 +497,9 @@ class LeitesCulinariaEntry(GiveawayEntry):
         # TODO: check for number of entries so far and don't skip if less than max entries
         if not LeitesCulinariaEntry.extra_entered and (LeitesCulinariaEntry.num_extra_entries < 2):
             LeitesCulinariaEntry.extra_entered = True
-            self.fill_textbox('input_2924_1', person.full_name)
-            self.fill_textbox('input_2924_2', person.email)
-            self.submit_from_textbox('input_2924_2')
+            self.fill_textbox('input_2931_1', person.full_name)
+            self.fill_textbox('input_2931_2', person.email)
+            self.submit_from_textbox('input_2931_2')
             LeitesCulinariaEntry.num_extra_entries += 1
 
         if submitted:
