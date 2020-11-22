@@ -85,7 +85,6 @@ class GiveawayEntry:
         print(person.first_name + ' has opened ' + self.url)
         if not self.is_valid:
             self.print('Giveaway has expired')
-            # TODO: Need to automatically remove giveaway info from txt
 
         # short circuit entering the giveaway if it is not important enough (based on rating)
         elif self.check_rating():
@@ -96,8 +95,7 @@ class GiveawayEntry:
 
                 # Open web page and begin entry process (try twice)
                 if not self.init_driver():
-                    if not self.init_driver():
-                        return
+                    return
 
                 if not self.fill_and_submit(person):
                     return
@@ -107,10 +105,7 @@ class GiveawayEntry:
 
     # Check if giveaway rating is satisfied
     def check_rating(self):
-        if random.randint(1, 10) > self.rating:
-            return False
-        else:
-            return True
+        return random.randint(1, 10) < self.rating
 
     def getSoup(self, link):
         html = requests.get(link).text
@@ -172,6 +167,7 @@ class GiveawayEntry:
         
         #  TODO: span.mv_close_button.mv_unbutton
 
+        # removing certain ads may be required
         #self.remove_iframe_ads()
 
         # TODO: internalize error handling for human delay
@@ -181,9 +177,9 @@ class GiveawayEntry:
         except:
             self.print('Unable to apply delay. Consider updating the HumanizedDelay class ')
         
-    def print(self, *args):
+    def print(self, *args, **kwargs):
         print('\t', end="")
-        print(*args)
+        print(*args, **kwargs)
 
     def remove_iframe_ads(self):
 
@@ -249,11 +245,11 @@ class GiveawayEntry:
         return submitted
 
     def click_submit_button(self, button):
-        if not self.actually_enter:
-            self.print('Simulating submission')
-        else:
+        if self.actually_enter:
             if self.click_button(button):
                 self.confirm_submission()
+        else:
+            self.print('Simulating submission')
 
         self.close_driver()
 
