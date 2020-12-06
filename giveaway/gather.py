@@ -95,7 +95,7 @@ class GiveawayGatherer:
                             print("New giveaway: {}".format(giveaway_link))
 
                             # Construct and write string to file
-                            new_giveaway_line = giveaway_expiration + ' 5 1 ' + giveaway_link + '\n'
+                            new_giveaway_line = giveaway_expiration + ' 7 1 ' + giveaway_link + '\n'
                             print(new_giveaway_line)
 
                             file.write(new_giveaway_line)
@@ -210,7 +210,7 @@ class GiveawayGatherer:
                     print("New giveaway: {}".format(giveaway_link))
 
                     # Construct and write string to file
-                    new_giveaway_line = giveaway_expiration + ' 5 1 ' + giveaway_link + '\n'
+                    new_giveaway_line = giveaway_expiration + ' 7 1 ' + giveaway_link + '\n'
                     print(new_giveaway_line)
                     file.write(new_giveaway_line)
 
