@@ -5,11 +5,12 @@ from datetime import date
 
 
 def remove_expired():
-    a_file = open('GiveawayInfo.txt', "r")
+    giveaway_info_file = 'GiveawayInfo.txt'
+    a_file = open(giveaway_info_file, "r")
     lines = a_file.readlines()
     a_file.close()
 
-    new_file = open('GiveawayInfo.txt', "w")
+    new_file = open(giveaway_info_file, "w")
     found_expired = False
     for line in lines:
         # get today's date
@@ -37,8 +38,6 @@ def remove_expired():
 
 
 if __name__ == "__main__":
-
     # first, remove all expired giveaways
     remove_expired()
-
     g.gather()

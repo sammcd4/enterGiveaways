@@ -3,9 +3,9 @@ import giveaway.manager as gm
 
 
 # Update all giveaways
-if False:
+if True:
     import giveaway.gather as g
-    g.gather()
+    #g.gather()
 
 # Choose people to enter giveaways for
 people = gp.readpeoplefile('Entrants.txt')

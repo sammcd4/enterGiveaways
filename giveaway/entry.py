@@ -6,9 +6,6 @@ import random
 import sys
 import requests
 from bs4 import BeautifulSoup
-import itertools
-import json
-import giveaway.gather as gg
 
 # create giveaway entry class
 from selenium.common.exceptions import StaleElementReferenceException
@@ -107,7 +104,7 @@ class GiveawayEntry:
     def check_rating(self):
         return random.randint(1, 10) < self.rating
 
-    def getSoup(self, link):
+    def get_soup(self, link):
         html = requests.get(link).text
         soup = BeautifulSoup(html, "html.parser")
         return soup
@@ -493,9 +490,9 @@ class LeitesCulinariaEntry(GiveawayEntry):
         # TODO: check for number of entries so far and don't skip if less than max entries
         if not LeitesCulinariaEntry.extra_entered and (LeitesCulinariaEntry.num_extra_entries < 2):
             LeitesCulinariaEntry.extra_entered = True
-            self.fill_textbox('input_2931_1', person.full_name)
-            self.fill_textbox('input_2931_2', person.email)
-            self.submit_from_textbox('input_2931_2')
+            self.fill_textbox('input_2932_1', person.full_name)
+            self.fill_textbox('input_2932_2', person.email)
+            self.submit_from_textbox('input_2932_2')
             LeitesCulinariaEntry.num_extra_entries += 1
 
         if submitted:
