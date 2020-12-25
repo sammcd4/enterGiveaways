@@ -153,8 +153,8 @@ class GiveawayGatherer:
                         print("Old giveaway: {}".format(giveaway_link))
                     else:
                         # need to filter some of these before writing everything
-                        brands = ['oxo', 'hamilton', 'cuisinart', 'all-clad', 'calphalon', 'anolon']
-                        items = ['ipad', 'waffle', 'air-fryer', 'steak', 'set']
+                        brands = ['oxo', 'hamilton', 'cuisinart', 'all-clad', 'calphalon', 'anolon', 'instant-pot']
+                        items = ['ipad', 'waffle', 'air-fryer', 'steak', 'set', 'wood', 'pair', 'skillet', 'knife', 'stainless']
                         matches = brands + items
                         if any(x in giveaway_link for x in matches):
                             print("New giveaway: {}".format(giveaway_link))
