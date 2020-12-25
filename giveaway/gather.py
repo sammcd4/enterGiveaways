@@ -48,13 +48,8 @@ class GiveawayGatherer:
     def gather_gluten_free(self):
         print('Gathering all new giveaways from Simply Gluten Free...')
         main_giveaway_page = 'https://simplygluten-free.com/giveaways/'
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
+        soup = self.get_soup(main_giveaway_page, ssl_verify=True)
 
-        context = ssl._create_unverified_context()
-        req = Request(main_giveaway_page, headers=headers)
-        webpage = urlopen(req, context=context).read()
-        soup = self.get_soup(main_giveaway_page)
-        print(soup)
 
         # only one page right now
 
@@ -193,16 +188,6 @@ class GiveawayGatherer:
                 vsscript_soup = soup_giveaway.findAll('div', id=lambda x: x and x.startswith('vsscript'))
                 vs_widget_soup = soup_giveaway.findAll('div', id=lambda x: x and x.startswith('vs_widget'))
 
-                if False:
-                    # dead-end code for parsing js code that generates the embedded document
-                    src_idx = giveaway_html.find('src="https://app.viralsweep.com')
-                    src_re = re.compile('https://app.viralsweep.com\S*"')
-                    src_result = src_re.findall(giveaway_html)
-                    js_code_url = src_result[0][:-1]
-                    js_script = self.getHTML(js_code_url)
-
-                #js_result = self.execute_js(js_script)
-
                 # get link to embedded iframe generated html
                 src_link = get_iframe_link(giveaway_link)
 
@@ -218,58 +203,6 @@ class GiveawayGatherer:
                     print('Unable to extract expiration date from the embedded html')
                     giveaway_expiration = 'no_expiration_found'
 
-                #options = Options()
-                #options.headless = True
-                #driver = webdriver.Chrome(options=options)
-                #driver.get(giveaway_link)
-
-
-                if False:
-                    # This will get the initial html - before javascript
-                    html1 = driver.page_source
-
-                    with open('giveaway.html', 'w') as f:
-                        f.write(html1)
-
-                    #giveaway_html = giveaway_html.split('\n')
-
-                    #req = urllib.request.Request(giveaway_link)
-                    #resp = urllib.request.urlopen(req)
-                    #respData = resp.read()
-                    #paragraphs = re.findall(r'icon-calendar', str(respData))
-
-                    if 'icon-calendar' in giveaway_html:
-                        print('found it')
-
-                    footer_sections = soup_giveaway.findAll("div", {'class': "footer"})
-                    for footer in footer_sections:
-                        date_section4 = footer.find_all("i", {'class': 'icon-calendar'})
-
-                    date_section5 = soup_giveaway.find_all(re.compile('icon-calendar'))
-                    date_section = soup_giveaway.findAll(attrs={'class': "icon-calendar"})
-                    date_section3 = soup_giveaway.find_all("i", {'class': "icon-calendar"})
-                    date_section2 = soup_giveaway.find_all("div", class_="icon-calendar")
-
-                    form = soup_giveaway.findAll("div", {'id': 'skg-meta'})
-                    # form = soup_giveaway.find_all("div", {'class': 'skg-submission-form'})
-                    # form = soup_giveaway.findAll("div", {'class': 'skg-submission-form-container'})
-                    # print(form)
-                    # expiration_paragraph = form.skg_submission_form
-                    for f in form:
-                        if f is not None:
-                            p_text = f.find('p').text
-                            # print(p_text)
-                            before_str = 'Giveaway Ends: '
-                            sidx = p_text.find('Giveaway Ends: ')
-                            # print('start idx: {}, end idx: {}'.format(sidx, sidx + len(before_str) + 10))
-                            sidx = sidx + len(before_str)
-                            giveaway_expiration = p_text[sidx:sidx + 10]
-                            # giveaway_expiration = f.find("div", {'class': 'skg-meta'})
-
-                            # print('\tExpires on: ' + giveaway_expiration)
-                            # print("Address: " + r.find("div", {'class': 'address'}).text)
-                            # print("Website: " + r.find_all("div", {'class': 'pageMeta-item'})[3].text)
-
                 # Now that giveaway info is found, write it to GiveawayInfo.txt
                 # if giveaway_link in current_giveaway_data:
                 if [i for i in current_giveaway_data if giveaway_link in i]:
@@ -283,9 +216,6 @@ class GiveawayGatherer:
                     print(new_giveaway_line)
                     file.write(new_giveaway_line)
 
-        #for link in soup.find_all('a'):
-        #   print(link.get('href'))
-
     def getHTML(self, link):
         text = ''
         try:
@@ -294,15 +224,23 @@ class GiveawayGatherer:
             print("Unable to get link text")
         return text
 
-    def get_soup(self, link):
-        html = requests.get(link).text
-        soup = BeautifulSoup(html, "html.parser")
+    def get_soup(self, link, ssl_verify=False):
+        if ssl_verify:
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
+
+            context = ssl._create_unverified_context()
+            req = Request(link, headers=headers)
+            webpage = urlopen(req, context=context).read()
+        else:
+            webpage = requests.get(link).text
+
+        soup = BeautifulSoup(webpage, "html.parser")
         return soup
 
 
 def gather():
     g = GiveawayGatherer('GiveawayInfo.txt')
-    #g.gather_gluten_free()
+    g.gather_gluten_free()
     g.gather_leites()
     g.gather()
 
