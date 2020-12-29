@@ -94,15 +94,26 @@ class GiveawayEntry:
                 if not self.init_driver():
                     return
 
+                if not self.prefill(person):
+                    print('Prefill process was unsuccessful')
+                    return
+
                 if not self.fill_and_submit(person):
                     return
 
         else:
             self.print('Skipping giveaway because only {}0% chance of entry'.format(self.rating))
 
+    #Prefill process
+    def prefill(self, person):
+        #Unimplemented method
+        return True
+
     # Check if giveaway rating is satisfied
     def check_rating(self):
-        return random.randint(1, 10) < self.rating
+        random_int = random.randint(1, 10)
+        #print(f'Random int: {random_int}')
+        return random_int < self.rating
 
     def get_soup(self, link):
         html = requests.get(link).text
@@ -209,6 +220,24 @@ class GiveawayEntry:
             self.print('Unable to fill {} textbox with {}'.format(text_id, text_str))
         self.human_delay.apply()
         return filled
+
+    def uncheck_box(self, box_id):
+        unchecked = False
+        try:
+            element = self._driver.find_element_by_id(box_id)
+            if element.is_selected():
+                element.click()
+
+            element = self._driver.find_element_by_id(box_id)
+            if not element.is_selected():
+                unchecked = True
+                #print(f'element {box_id} has been unchecked')
+            #else:
+                #print(f'element {box_id} remained checked')
+        except:
+            self.print(f'Unable to uncheck {box_id}')
+            raise
+        return unchecked
 
     def fill_textbox_and_submit(self, text_id, text_str):
         submitted = False
@@ -468,6 +497,17 @@ class GlutenFreeEntry(FirstLastEmailGiveawayEntry):
         self.last_name_id = 'input_1_2'
         self.email_id = 'input_1_3'
         self.submit_button_id = 'gform_submit_button_1'
+
+    # Prefill process
+    def prefill(self, person):
+        # uncheck all newsletter and subscription boxes
+        unchecked_newsletter = self.uncheck_box('choice_1_5_1')
+        if unchecked_newsletter:
+            self.print('Chose not to subscribe to newsletter')
+        unchecked_other = self.uncheck_box('choice_1_5_2')
+        if unchecked_other:
+            self.print('Chose not to subscribe to other communication')
+        return unchecked_newsletter and unchecked_other
 
     def confirm_submission_page(self):
         return True

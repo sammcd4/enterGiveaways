@@ -37,7 +37,7 @@ class GiveawayGatherer:
 
     def __init__(self, file_url):
         self.file_url = file_url
-        self.debug = True
+        self.debug = False
 
     def has_icon_calendar_class(self, tag):
         return tag.has_attr('class') and not tag.has_attr('id')
@@ -50,56 +50,74 @@ class GiveawayGatherer:
         main_giveaway_page = 'https://simplygluten-free.com/giveaways/'
         soup = self.get_soup(main_giveaway_page, ssl_verify=True)
 
-
-        # only one page right now
-
         with open(self.file_url, 'r') as f:
             current_giveaway_data = f.readlines()
 
+        # only one page right now
         giveaway_posts = soup.findAll("div", {"class": "post-s1"})
-        #giveaway_posts = soup.findAll("div", {"class": "category-giveaways"})
-        if self.debug:
-            print(giveaway_posts)
 
         with open(self.file_url, 'a') as file:
             for gp in giveaway_posts:
                 giveaway_link = gp.find('h2').find('a').get('href')
                 print(giveaway_link)
 
-                continue
-                # TODO Update this leites-specific code to fit simply gluten free pages
                 # extract giveaway expiration from webpage with another soup
-                soup_giveaway = self.get_soup(giveaway_link)
+                soup_giveaway = self.get_soup(giveaway_link, ssl_verify=True)
 
-                entry_content = soup_giveaway.find('div', {"class": "entry-content"})
-                expiration_date_str = soup_giveaway.body.findAll(text=re.compile('Deadline is'))
+                entry_content = soup_giveaway.find('div', {"class": "blog-post-single-content"})
+                expiration_date_str = soup_giveaway.body.find(text=re.compile('This giveaway ends on'))
+                expiration_date_str = str(expiration_date_str).replace('This giveaway ends on ', '')
+                if not expiration_date_str:
+                    expiration_date_str = soup_giveaway.body.find(text=re.compile('Contest ends'))
+                    expiration_date_str = str(expiration_date_str).replace('Contest ends ', '')
+                if self.debug:
+                    print(expiration_date_str)
 
-                expiration_date_str = str(expiration_date_str).replace('. Deadline is 11:59PM ET ', '')
-                expiration_date_str = expiration_date_str.replace("['", "")
-                expiration_date_str = expiration_date_str.replace(".']", "")
-                # print(expiration_date_str)
-                digits = expiration_date_str.split('.')
-                # print(digits)
+                # get expiration date string using %b %d, %Y format
+                b_flag = False
+                try:
+                    expire_datetime_object = datetime.datetime.strptime(expiration_date_str, '%b %d, %Y')
+                    #print(expire_datetime_object)
+                except:
+                    b_flag = True
 
-                giveaway_expiration = '20{}-{}-{}'.format(digits[2], digits[0], digits[1])
+                if not expire_datetime_object:
+                    m_flag = False
+                    try:
+                        expire_datetime_object = datetime.datetime.strptime(expiration_date_str, '%m %d, %Y')
+                        #print(expire_datetime_object)
+                    except:
+                        m_flag = True
+
+                    if not expire_datetime_object:
+                        if b_flag:
+                            print(f'Unable to convert {expiration_date_str} to datetime object with %b %d %Y')
+                        elif m_flag:
+                            print(f'Unable to convert {expiration_date_str} to datetime object with %m %d %Y')
+                        else:
+                            print(f'Unable to convert {expiration_date_str} using any existing methods')
+
+                if expire_datetime_object < datetime.datetime.today():
+                    expected_year = datetime.datetime.today().year + 1
+                    print(f'Expiration date is outdated. year is {expire_datetime_object.year}. Moving up year to {expected_year}.')
+                    expire_datetime_object = expire_datetime_object.replace(year=expected_year)
+
+                giveaway_expiration = '{}-{}-{}'.format(expire_datetime_object.year, expire_datetime_object.month, expire_datetime_object.day)
+                if self.debug:
+                    print(giveaway_expiration)
 
                 # Now that giveaway info is found, write it to GiveawayInfo.txt
                 # if giveaway_link in current_giveaway_data:
                 if [i for i in current_giveaway_data if giveaway_link in i]:
                     print("Old giveaway: {}".format(giveaway_link))
                 else:
-                    # need to filter some of these before writing everything
-                    brands = ['oxo', 'hamilton', 'cuisinart', 'all-clad', 'calphalon', 'anolon']
-                    items = ['ipad', 'waffle', 'air-fryer', 'steak', 'set']
-                    matches = brands + items
-                    if any(x in giveaway_link for x in matches):
-                        print("New giveaway: {}".format(giveaway_link))
+                    print("New giveaway: {}".format(giveaway_link))
 
-                        # Construct and write string to file
-                        new_giveaway_line = giveaway_expiration + ' 7 1 ' + giveaway_link + '\n'
-                        print(new_giveaway_line)
+                    # Construct and write string to file
+                    new_giveaway_line = giveaway_expiration + ' 7 1 ' + giveaway_link + '\n'
+                    print(new_giveaway_line)
 
-                        file.write(new_giveaway_line)
+                    file.write(new_giveaway_line)
 
     def gather_leites(self):
         print('Gathering all new giveaways from Leites Culinaria...')
@@ -183,7 +201,7 @@ class GiveawayGatherer:
 
                 # extract giveaway expiration from webpage with another soup
                 soup_giveaway = self.get_soup(giveaway_link)
-                giveaway_html = self.getHTML(giveaway_link)
+                giveaway_html = self.get_html(giveaway_link)
 
                 vsscript_soup = soup_giveaway.findAll('div', id=lambda x: x and x.startswith('vsscript'))
                 vs_widget_soup = soup_giveaway.findAll('div', id=lambda x: x and x.startswith('vs_widget'))
@@ -195,10 +213,19 @@ class GiveawayGatherer:
                 try:
                     soup_src = self.get_soup(src_link)
                     date_section_actual = soup_src.find("i", {'class': 'icon-calendar'})
+                except:
+                    print('Unable to retrieve date element')
+
+                try:
                     giveaway_ends = date_section_actual.next.text
                     ends_idx = giveaway_ends.find(' ')
                     giveaway_expiration_str = giveaway_ends[ends_idx+1:]
-                    giveaway_expiration = datetime.datetime.strptime(giveaway_expiration_str, '%m-%d-%Y').strftime('%Y-%m-%d')
+                    if self.debug:
+                        print(giveaway_expiration_str)
+                    giveaway_datetime = datetime.datetime.strptime(giveaway_expiration_str, '%m-%d-%Y')
+                    if self.debug:
+                        print(giveaway_datetime)
+                    giveaway_expiration = giveaway_datetime.strftime('%Y-%m-%d')
                 except:
                     print('Unable to extract expiration date from the embedded html')
                     giveaway_expiration = 'no_expiration_found'
@@ -216,7 +243,8 @@ class GiveawayGatherer:
                     print(new_giveaway_line)
                     file.write(new_giveaway_line)
 
-    def getHTML(self, link):
+    @staticmethod
+    def get_html(link):
         text = ''
         try:
             text = requests.get(link).text
@@ -224,7 +252,8 @@ class GiveawayGatherer:
             print("Unable to get link text")
         return text
 
-    def get_soup(self, link, ssl_verify=False):
+    @staticmethod
+    def get_soup(link, ssl_verify=False):
         if ssl_verify:
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
 

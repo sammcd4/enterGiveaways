@@ -59,15 +59,15 @@ class GiveawayEntrant:
                 # TODO Create a GiveawayLauncher class that will always determine whether to automate or launch the giveaway
                 # TODO Support focusing particular site
                 # TODO Support focusing particular person
-                #if self.person.first_name != 'Sam':
-                    #print('Skipping giveaway because I am not Sam')
-                    #continue
+                # if self.person.first_name != 'Sam':
+                #     print('Skipping giveaway because I am not Sam')
+                #     continue
                 if self.able_to_automate_SK and 'steamykitchen.com' in url_str:
                     print('{} Creating new SteamyKitchen giveaway for {}'.format(person.first_name, url_str))
                     self.giveaways.append(ge.SteamyKitchenEntry(url_str, expire_date, rating, num_entries))
                 elif 'leitesculinaria.com' in url_str:
                     self.giveaways.append(ge.LeitesCulinariaEntry(url_str, expire_date, rating, num_entries))
-                elif 'simplygluten-free.com' in url_str and self.person.first_name == 'Sam':
+                elif 'simplygluten-free.com' in url_str:
                     self.giveaways.append(ge.GlutenFreeEntry(url_str, expire_date, rating, num_entries))
 
     def enter_giveaways(self):
