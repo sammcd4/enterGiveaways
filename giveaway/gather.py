@@ -39,22 +39,29 @@ class GiveawayGatherer:
         self.file_url = file_url
         self.debug = False
 
-    def has_icon_calendar_class(self, tag):
-        return tag.has_attr('class') and not tag.has_attr('id')
-
-    def execute_js(self, script):
-        return js2py.eval_js(script)
-
-    def gather_gluten_free(self):
-        print('Gathering all new giveaways from Simply Gluten Free...')
-        main_giveaway_page = 'https://simplygluten-free.com/giveaways/'
-        soup = self.get_soup(main_giveaway_page, ssl_verify=True)
-
+    def current_giveaway_data(self):
         with open(self.file_url, 'r') as f:
             current_giveaway_data = f.readlines()
+        return current_giveaway_data
 
-        # only one page right now
-        giveaway_posts = soup.findAll("div", {"class": "post-s1"})
+    def get_giveaway_posts(self, giveaway_page):
+        if 'simplygluten-free' in giveaway_page:
+            print('Gathering all new giveaways from Simply Gluten Free...')
+            soup = self.get_soup(giveaway_page, ssl_verify=True)
+            giveaway_posts = soup.findAll("div", {"class": "post-s1"})
+
+        elif 'steamykitchen' in giveaway_page:
+            print('Gathering all new giveaways from Steamy Kitchen...')
+            soup = self.get_soup(giveaway_page)
+            giveaway_posts = soup.findAll("article", {"class": "category-steamy-kitchen-giveaways"})
+
+        return giveaway_posts
+
+    def gather_gluten_free(self):
+        current_giveaway_data = self.current_giveaway_data()
+
+        main_giveaway_page = 'https://simplygluten-free.com/giveaways/'
+        giveaway_posts = self.get_giveaway_posts(main_giveaway_page)
 
         with open(self.file_url, 'a') as file:
             for gp in giveaway_posts:
@@ -179,21 +186,12 @@ class GiveawayGatherer:
                             file.write(new_giveaway_line)
 
     def gather(self):
-        print('Gathering all new giveaways from Steamy Kitchen...')
-        giveaway_page = 'https://steamykitchen.com/category/steamy-kitchen-giveaways'
+        current_giveaway_data = self.current_giveaway_data()
 
-        with open(self.file_url, 'r') as f:
-            current_giveaway_data = f.readlines()
-        # print(current_giveaway_data)
-
-        soup = self.get_soup(giveaway_page)
-        #giveaway_posts = soup.findAll("div", {"class": "item archive-post"})
-        giveaway_posts = soup.findAll("article", {"class": "category-steamy-kitchen-giveaways"})
-        if self.debug:
-            print(f'DEBUG - All giveaway posts: \n{giveaway_posts}')
+        main_giveaway_page = 'https://steamykitchen.com/category/steamy-kitchen-giveaways'
+        giveaway_posts = self.get_giveaway_posts(main_giveaway_page)
 
         with open(self.file_url, 'a') as file:
-
             for gp in giveaway_posts:
                 giveaway_link = gp.find('a').get('href')
                 if self.debug:

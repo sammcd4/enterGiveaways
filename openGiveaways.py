@@ -21,6 +21,10 @@ if __name__ == "__main__":
             if 'leites' in url:
                 continue
 
+            # skip any simply gluten free giveaways, because they can be automated
+            if 'simplygluten-free' in url:
+                continue
+
             if random.randint(1, 10) > int(rating):
                 print('Due to rating of {}/10 skipping {}'.format(int(rating), url))
                 continue
