@@ -20,7 +20,7 @@ def get_iframe_link(giveaway_link):
     src_link = ''
     try:
         src_link = p_element[0].get_attribute('src')
-        print(src_link)
+        #print(src_link)
     except:
         print('Unable to get src attribute from iframe link')
 
@@ -45,17 +45,38 @@ class GiveawayGatherer:
         return current_giveaway_data
 
     def get_giveaway_posts(self, giveaway_page):
+        ssl_verify = False
         if 'simplygluten-free' in giveaway_page:
-            print('Gathering all new giveaways from Simply Gluten Free...')
-            soup = self.get_soup(giveaway_page, ssl_verify=True)
-            giveaway_posts = soup.findAll("div", {"class": "post-s1"})
-
+            print('\nGathering all new giveaways from Simply Gluten Free...')
+            ssl_verify = True
+            element_type = 'div'
+            element_class = 'post-s1'
         elif 'steamykitchen' in giveaway_page:
-            print('Gathering all new giveaways from Steamy Kitchen...')
-            soup = self.get_soup(giveaway_page)
-            giveaway_posts = soup.findAll("article", {"class": "category-steamy-kitchen-giveaways"})
+            print('\nGathering all new giveaways from Steamy Kitchen...')
+            element_type = 'article'
+            element_class = 'category-steamy-kitchen-giveaways'
+        elif 'leitesculinaria' in giveaway_page:
+            element_type = 'article'
+            element_class = 'post recipes'
 
-        return giveaway_posts
+        soup = self.get_soup(giveaway_page, ssl_verify=ssl_verify)
+        return soup.findAll(element_type, {"class": element_class})
+
+    def get_new_giveaway(self, current_giveaway_data, giveaway_link, giveaway_expiration, num_entries=1, matches=None):
+        if [i for i in current_giveaway_data if giveaway_link in i]:
+            print("Old giveaway: {}".format(giveaway_link))
+        else:
+            # filter out any that don't match
+            if matches and not any(x in giveaway_link for x in matches):
+                return None
+
+            print(f'New giveaway: {giveaway_link}')
+
+            # Construct and write string to file
+            new_giveaway_line = f'{giveaway_expiration} 7 {num_entries} {giveaway_link}\n'
+            print(new_giveaway_line)
+
+            return new_giveaway_line
 
     def gather_gluten_free(self):
         current_giveaway_data = self.current_giveaway_data()
@@ -66,7 +87,7 @@ class GiveawayGatherer:
         with open(self.file_url, 'a') as file:
             for gp in giveaway_posts:
                 giveaway_link = gp.find('h2').find('a').get('href')
-                print(giveaway_link)
+                #print(giveaway_link)
 
                 # extract giveaway expiration from webpage with another soup
                 soup_giveaway = self.get_soup(giveaway_link, ssl_verify=True)
@@ -83,20 +104,20 @@ class GiveawayGatherer:
                 # get expiration date string using %b %d, %Y format
                 b_flag = False
                 try:
-                    expire_datetime_object = datetime.datetime.strptime(expiration_date_str, '%b %d, %Y')
+                    expire_datetime = datetime.datetime.strptime(expiration_date_str, '%b %d, %Y')
                     #print(expire_datetime_object)
                 except:
                     b_flag = True
 
-                if not expire_datetime_object:
+                if not expire_datetime:
                     m_flag = False
                     try:
-                        expire_datetime_object = datetime.datetime.strptime(expiration_date_str, '%m %d, %Y')
+                        expire_datetime = datetime.datetime.strptime(expiration_date_str, '%m %d, %Y')
                         #print(expire_datetime_object)
                     except:
                         m_flag = True
 
-                    if not expire_datetime_object:
+                    if not expire_datetime:
                         if b_flag:
                             print(f'Unable to convert {expiration_date_str} to datetime object with %b %d %Y')
                         elif m_flag:
@@ -104,30 +125,23 @@ class GiveawayGatherer:
                         else:
                             print(f'Unable to convert {expiration_date_str} using any existing methods')
 
-                if expire_datetime_object < datetime.datetime.today():
+                if expire_datetime < datetime.datetime.today():
                     expected_year = datetime.datetime.today().year + 1
-                    print(f'Expiration date is outdated. year is {expire_datetime_object.year}. Moving up year to {expected_year}.')
-                    expire_datetime_object = expire_datetime_object.replace(year=expected_year)
+                    print(f'Expiration date is outdated. year is {expire_datetime.year}. Moving up year to {expected_year}.')
+                    expire_datetime = expire_datetime.replace(year=expected_year)
 
-                giveaway_expiration = '{}-{}-{}'.format(expire_datetime_object.year, expire_datetime_object.month, expire_datetime_object.day)
+                giveaway_expiration = f'{expire_datetime.year}-{expire_datetime.month}-{expire_datetime.day}'
                 if self.debug:
                     print(giveaway_expiration)
 
                 # Now that giveaway info is found, write it to GiveawayInfo.txt
                 # if giveaway_link in current_giveaway_data:
-                if [i for i in current_giveaway_data if giveaway_link in i]:
-                    print("Old giveaway: {}".format(giveaway_link))
-                else:
-                    print("New giveaway: {}".format(giveaway_link))
-
-                    # Construct and write string to file
-                    new_giveaway_line = giveaway_expiration + ' 7 1 ' + giveaway_link + '\n'
-                    print(new_giveaway_line)
-
+                new_giveaway_line = self.get_new_giveaway(current_giveaway_data, giveaway_link, giveaway_expiration)
+                if new_giveaway_line:
                     file.write(new_giveaway_line)
 
     def gather_leites(self):
-        print('Gathering all new giveaways from Leites Culinaria...')
+        print('\nGathering all new giveaways from Leites Culinaria...')
         main_giveaway_page = 'https://leitesculinaria.com/category/giveaways'
         soup = self.get_soup(main_giveaway_page)
 
@@ -145,7 +159,7 @@ class GiveawayGatherer:
             with open(self.file_url, 'r') as f:
                 current_giveaway_data = f.readlines()
 
-            giveaway_posts = soup.findAll("article", {"class": "post recipes"})
+            giveaway_posts = self.get_giveaway_posts(giveaway_page)
 
             with open(self.file_url, 'a') as file:
                 for gp in giveaway_posts:
@@ -165,44 +179,31 @@ class GiveawayGatherer:
                     digits = expiration_date_str.split('.')
                     #print(digits)
 
+                    # TODO parse number of times can be entered
+
                     giveaway_expiration = '20{}-{}-{}'.format(digits[2], digits[0], digits[1])
 
                     # Now that giveaway info is found, write it to GiveawayInfo.txt
                     # if giveaway_link in current_giveaway_data:
-                    if [i for i in current_giveaway_data if giveaway_link in i]:
-                        print("Old giveaway: {}".format(giveaway_link))
-                    else:
-                        # need to filter some of these before writing everything
-                        brands = ['oxo', 'hamilton', 'cuisinart', 'all-clad', 'calphalon', 'anolon', 'instant-pot']
-                        items = ['ipad', 'waffle', 'air-fryer', 'steak', 'set', 'wood', 'pair', 'skillet', 'knife', 'stainless']
-                        matches = brands + items
-                        if any(x in giveaway_link for x in matches):
-                            print("New giveaway: {}".format(giveaway_link))
+                    brands = ['oxo', 'hamilton', 'cuisinart', 'all-clad', 'calphalon', 'anolon', 'instant-pot']
+                    items = ['ipad', 'waffle', 'air-fryer', 'steak', 'set', 'wood', 'pair', 'skillet', 'knife',
+                             'stainless']
+                    new_giveaway_line = self.get_new_giveaway(current_giveaway_data, giveaway_link, giveaway_expiration, matches=(brands + items))
+                    if new_giveaway_line:
+                        file.write(new_giveaway_line)
 
-                            # Construct and write string to file
-                            new_giveaway_line = giveaway_expiration + ' 7 1 ' + giveaway_link + '\n'
-                            print(new_giveaway_line)
-
-                            file.write(new_giveaway_line)
-
-    def gather(self):
+    def gather_steamy_kitchen(self):
         current_giveaway_data = self.current_giveaway_data()
 
         main_giveaway_page = 'https://steamykitchen.com/category/steamy-kitchen-giveaways'
         giveaway_posts = self.get_giveaway_posts(main_giveaway_page)
 
         with open(self.file_url, 'a') as file:
+            count = 0
             for gp in giveaway_posts:
                 giveaway_link = gp.find('a').get('href')
                 if self.debug:
                     print("Giveaway link: " + giveaway_link)
-
-                # extract giveaway expiration from webpage with another soup
-                soup_giveaway = self.get_soup(giveaway_link)
-                giveaway_html = self.get_html(giveaway_link)
-
-                vsscript_soup = soup_giveaway.findAll('div', id=lambda x: x and x.startswith('vsscript'))
-                vs_widget_soup = soup_giveaway.findAll('div', id=lambda x: x and x.startswith('vs_widget'))
 
                 # get link to embedded iframe generated html
                 src_link = get_iframe_link(giveaway_link)
@@ -225,30 +226,19 @@ class GiveawayGatherer:
                         print(giveaway_datetime)
                     giveaway_expiration = giveaway_datetime.strftime('%Y-%m-%d')
                 except:
-                    print('Unable to extract expiration date from the embedded html')
+                    print('Unable to parse expiration date from the embedded html')
                     giveaway_expiration = 'no_expiration_found'
 
                 # Now that giveaway info is found, write it to GiveawayInfo.txt
-                # if giveaway_link in current_giveaway_data:
-                if [i for i in current_giveaway_data if giveaway_link in i]:
-
-                    print("Old giveaway: {}".format(giveaway_link))
-                else:
-                    print("New giveaway: {}".format(giveaway_link))
-
-                    # Construct and write string to file
-                    new_giveaway_line = giveaway_expiration + ' 7 1 ' + giveaway_link + '\n'
-                    print(new_giveaway_line)
+                new_giveaway_line = self.get_new_giveaway(current_giveaway_data, giveaway_link, giveaway_expiration)
+                if new_giveaway_line:
+                    count = 0 # reset count
                     file.write(new_giveaway_line)
-
-    @staticmethod
-    def get_html(link):
-        text = ''
-        try:
-            text = requests.get(link).text
-        except:
-            print("Unable to get link text")
-        return text
+                else:
+                    # short-circuit giveaway lookup because most likely passed all the new ones
+                    if count > 10:
+                        return
+                    count += 1
 
     @staticmethod
     def get_soup(link, ssl_verify=False):
@@ -267,9 +257,9 @@ class GiveawayGatherer:
 
 def gather():
     g = GiveawayGatherer('GiveawayInfo.txt')
-    g.gather_gluten_free()
-    g.gather_leites()
-    g.gather()
+    #g.gather_gluten_free()
+    #g.gather_leites()
+    #g.gather_steamy_kitchen()
 
 
 if __name__ == '__main__':

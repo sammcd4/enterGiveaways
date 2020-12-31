@@ -85,22 +85,22 @@ class GiveawayEntry:
 
         # short circuit entering the giveaway if it is not important enough (based on rating)
         elif self.check_rating():
-
             for i in range(self.num_entries):
                 if self.num_entries > 1:
-                    self.print('Entry # {}'.format(i+1))
+                    self.print('Entry #{}'.format(i+1))
 
-                # Open web page and begin entry process (try twice)
+                # Open web page and begin entry process (try twice) TODO poll and timeout
                 if not self.init_driver():
-                    return
+                    self.print('Unable to init driver')
+                    continue
 
                 if not self.prefill(person):
-                    print('Prefill process was unsuccessful')
-                    return
+                    self.print('Prefill process was unsuccessful')
+                    continue
 
                 if not self.fill_and_submit(person):
-                    return
-
+                    self.print('Unable to fill and submit')
+                    continue
         else:
             self.print('Skipping giveaway because only {}0% chance of entry'.format(self.rating))
 
@@ -435,6 +435,8 @@ class SteamyKitchenEntry(FirstLastEmailGiveawayEntry):
         # additionally, close original pages webdriver
         self.close_orig_driver()
 
+        return submitted
+
     def close_orig_driver(self):
 
         try:
@@ -538,6 +540,8 @@ class LeitesCulinariaEntry(GiveawayEntry):
         if submitted:
             self.confirm_submission()
         self.close_driver()
+
+        return submitted
 
     def confirm_submission_page(self):
         return True
