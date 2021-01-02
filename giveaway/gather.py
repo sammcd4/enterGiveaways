@@ -257,9 +257,9 @@ class GiveawayGatherer:
 
 def gather():
     g = GiveawayGatherer('GiveawayInfo.txt')
-    #g.gather_gluten_free()
-    #g.gather_leites()
-    #g.gather_steamy_kitchen()
+    g.gather_gluten_free()
+    g.gather_leites()
+    g.gather_steamy_kitchen()
 
 
 if __name__ == '__main__':
