@@ -27,11 +27,10 @@ def remove_expired():
             new_file.write(line)
         else:
             if not found_expired:
-                print('Expired giveaways:')
+                print('Checking for expired giveaways...')
                 found_expired = True
             print(line)
 
-    print('Check expired giveaways complete')
     if not found_expired:
         print('No giveaways have expired')
     new_file.close()

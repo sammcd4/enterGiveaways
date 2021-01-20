@@ -64,13 +64,14 @@ class GiveawayGatherer:
 
     def get_new_giveaway(self, current_giveaway_data, giveaway_link, giveaway_expiration, num_entries=1, matches=None):
         if [i for i in current_giveaway_data if giveaway_link in i]:
-            print("Old giveaway: {}".format(giveaway_link))
+            if self.debug:
+                print("Old giveaway: {}".format(giveaway_link))
         else:
             # filter out any that don't match
             if matches and not any(x in giveaway_link for x in matches):
                 return None
 
-            print(f'New giveaway: {giveaway_link}')
+            print('New giveaway:')
 
             # Construct and write string to file
             new_giveaway_line = f'{giveaway_expiration} 7 {num_entries} {giveaway_link}\n'
@@ -127,7 +128,8 @@ class GiveawayGatherer:
 
                 if expire_datetime < datetime.datetime.today():
                     expected_year = datetime.datetime.today().year + 1
-                    print(f'Expiration date is outdated. year is {expire_datetime.year}. Moving up year to {expected_year}.')
+                    if self.debug:
+                        print(f'Expiration date is outdated. year is {expire_datetime.year}. Moving up year to {expected_year}.')
                     expire_datetime = expire_datetime.replace(year=expected_year)
 
                 giveaway_expiration = f'{expire_datetime.year}-{expire_datetime.month}-{expire_datetime.day}'
@@ -180,7 +182,9 @@ class GiveawayGatherer:
                     #print(digits)
 
                     # TODO parse number of times can be entered
-
+                    if len(digits) < 3:
+                        print(f'Problem with date digits: {digits}')
+                        continue
                     giveaway_expiration = '20{}-{}-{}'.format(digits[2], digits[0], digits[1])
 
                     # Now that giveaway info is found, write it to GiveawayInfo.txt
@@ -255,11 +259,12 @@ class GiveawayGatherer:
         return soup
 
 
-def gather():
+def gather(exclude_steamy_kitchen=False):
     g = GiveawayGatherer('GiveawayInfo.txt')
     g.gather_gluten_free()
     g.gather_leites()
-    g.gather_steamy_kitchen()
+    if not exclude_steamy_kitchen:
+        g.gather_steamy_kitchen()
 
 
 if __name__ == '__main__':

@@ -112,7 +112,7 @@ class GiveawayEntry:
     # Check if giveaway rating is satisfied
     def check_rating(self):
         random_int = random.randint(1, 10)
-        #print(f'Random int: {random_int}')
+        #self.print(f'Random int: {random_int} < Rating: {self.rating}')
         return random_int < self.rating
 
     def get_soup(self, link):
