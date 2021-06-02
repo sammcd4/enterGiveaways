@@ -88,7 +88,7 @@ class GiveawayGatherer:
         with open(self.file_url, 'a') as file:
             for gp in giveaway_posts:
                 giveaway_link = gp.find('h2').find('a').get('href')
-                #print(giveaway_link)
+                print(giveaway_link)
 
                 # extract giveaway expiration from webpage with another soup
                 soup_giveaway = self.get_soup(giveaway_link, ssl_verify=True)
@@ -96,35 +96,47 @@ class GiveawayGatherer:
                 entry_content = soup_giveaway.find('div', {"class": "blog-post-single-content"})
                 expiration_date_str = soup_giveaway.body.find(text=re.compile('This giveaway ends on'))
                 expiration_date_str = str(expiration_date_str).replace('This giveaway ends on ', '')
-                if not expiration_date_str:
+                if not expiration_date_str or expiration_date_str == 'None':
                     expiration_date_str = soup_giveaway.body.find(text=re.compile('Contest ends'))
                     expiration_date_str = str(expiration_date_str).replace('Contest ends ', '')
+                if expiration_date_str[-1] == '.':
+                    expiration_date_str = expiration_date_str[0:-1]
+
+                # replace Sept with Sep
+                expiration_date_str = expiration_date_str.replace('Sept', 'Sep')
                 if self.debug:
                     print(expiration_date_str)
 
                 # get expiration date string using %b %d, %Y format
                 b_flag = False
+                expire_datetime = None
+                #print(f'expiration_date_str={expiration_date_str}')
                 try:
                     expire_datetime = datetime.datetime.strptime(expiration_date_str, '%b %d, %Y')
-                    #print(expire_datetime_object)
                 except:
                     b_flag = True
+
+                try:
+                    expire_datetime = datetime.datetime.strptime(expiration_date_str, '%B %d, %Y')
+                except:
+                    b_cap_flag = True
 
                 if not expire_datetime:
                     m_flag = False
                     try:
                         expire_datetime = datetime.datetime.strptime(expiration_date_str, '%m %d, %Y')
-                        #print(expire_datetime_object)
                     except:
                         m_flag = True
 
-                    if not expire_datetime:
-                        if b_flag:
-                            print(f'Unable to convert {expiration_date_str} to datetime object with %b %d %Y')
-                        elif m_flag:
-                            print(f'Unable to convert {expiration_date_str} to datetime object with %m %d %Y')
-                        else:
-                            print(f'Unable to convert {expiration_date_str} using any existing methods')
+                if not expire_datetime:
+                    if b_flag:
+                        print(f'Unable to convert {expiration_date_str} to datetime object with %b %d, %Y')
+                    if b_cap_flag:
+                        print(f'Unable to convert {expiration_date_str} to datetime object with %B %d, %Y')
+                    if m_flag:
+                        print(f'Unable to convert {expiration_date_str} to datetime object with %m %d, %Y')
+                    else:
+                        print(f'Unable to convert {expiration_date_str} using any existing methods')
 
                 if expire_datetime < datetime.datetime.today():
                     expected_year = datetime.datetime.today().year + 1
@@ -169,7 +181,11 @@ class GiveawayGatherer:
                     #print(giveaway_link)
 
                     # extract giveaway expiration from webpage with another soup
-                    soup_giveaway = self.get_soup(giveaway_link)
+                    try:
+                        soup_giveaway = self.get_soup(giveaway_link)
+                    except:
+                        print(f'There was a problem with get_soup')
+                        continue
 
                     entry_content = soup_giveaway.find('div', {"class": "entry-content"})
                     expiration_date_str = soup_giveaway.body.findAll(text=re.compile('Deadline is'))
