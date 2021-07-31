@@ -62,7 +62,7 @@ class GiveawayGatherer:
         soup = self.get_soup(giveaway_page, ssl_verify=ssl_verify)
         return soup.findAll(element_type, {"class": element_class})
 
-    def get_new_giveaway(self, current_giveaway_data, giveaway_link, giveaway_expiration, num_entries=1, matches=None):
+    def get_new_giveaway(self, current_giveaway_data, giveaway_link, giveaway_expiration, num_entries=1, matches=None, exclude=None):
         if [i for i in current_giveaway_data if giveaway_link in i]:
             if self.debug:
                 print("Old giveaway: {}".format(giveaway_link))
@@ -71,9 +71,15 @@ class GiveawayGatherer:
             if matches and not any(x in giveaway_link for x in matches):
                 return None
 
+            # filter out any that do match the exclude list
+            if exclude and any(x in giveaway_link for x in exclude):
+                return None
+
             print('New giveaway:')
 
             # Construct and write string to file
+            if 'leites' in giveaway_link:
+                num_entries = 2
             new_giveaway_line = f'{giveaway_expiration} 7 {num_entries} {giveaway_link}\n'
             print(new_giveaway_line)
 
@@ -88,7 +94,7 @@ class GiveawayGatherer:
         with open(self.file_url, 'a') as file:
             for gp in giveaway_posts:
                 giveaway_link = gp.find('h2').find('a').get('href')
-                print(giveaway_link)
+                #print(giveaway_link)
 
                 # extract giveaway expiration from webpage with another soup
                 soup_giveaway = self.get_soup(giveaway_link, ssl_verify=True)
@@ -208,7 +214,8 @@ class GiveawayGatherer:
                     brands = ['oxo', 'hamilton', 'cuisinart', 'all-clad', 'calphalon', 'anolon', 'instant-pot']
                     items = ['ipad', 'waffle', 'air-fryer', 'steak', 'set', 'wood', 'pair', 'skillet', 'knife',
                              'stainless']
-                    new_giveaway_line = self.get_new_giveaway(current_giveaway_data, giveaway_link, giveaway_expiration, matches=(brands + items))
+                    exclude_list = ['coffee']
+                    new_giveaway_line = self.get_new_giveaway(current_giveaway_data, giveaway_link, giveaway_expiration, matches=(brands + items), exclude=exclude_list)
                     if new_giveaway_line:
                         file.write(new_giveaway_line)
 
@@ -250,7 +257,8 @@ class GiveawayGatherer:
                     giveaway_expiration = 'no_expiration_found'
 
                 # Now that giveaway info is found, write it to GiveawayInfo.txt
-                new_giveaway_line = self.get_new_giveaway(current_giveaway_data, giveaway_link, giveaway_expiration)
+                exclude_list = ['coffee']
+                new_giveaway_line = self.get_new_giveaway(current_giveaway_data, giveaway_link, giveaway_expiration, exclude=exclude_list)
                 if new_giveaway_line:
                     count = 0 # reset count
                     file.write(new_giveaway_line)
