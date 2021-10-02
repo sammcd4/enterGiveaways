@@ -37,7 +37,7 @@ class GiveawayGatherer:
 
     def __init__(self, file_url):
         self.file_url = file_url
-        self.debug = False
+        self.debug = True
 
     def current_giveaway_data(self):
         with open(self.file_url, 'r') as f:
@@ -244,7 +244,13 @@ class GiveawayGatherer:
 
                 try:
                     giveaway_ends = date_section_actual.next.text
+                    if self.debug:
+                        print('Giveaway ends:')
+                        print(giveaway_ends)
                     ends_idx = giveaway_ends.find(' ')
+                    if self.debug:
+                        print('ends_idx')
+                        print(ends_idx)
                     giveaway_expiration_str = giveaway_ends[ends_idx+1:]
                     if self.debug:
                         print(giveaway_expiration_str)

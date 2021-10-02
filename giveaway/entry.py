@@ -6,9 +6,16 @@ import random
 import sys
 import requests
 from bs4 import BeautifulSoup
+import logging
 
 # create giveaway entry class
 from selenium.common.exceptions import StaleElementReferenceException
+
+# TODO Have a common package to put HumanizedDelay class
+# TODO use logging instead of debug printing stuff on occasion
+# TODO perhaps replace custom entered files with logger files
+# TODO Total log to date for each entree
+# TODO thread for each person entering giveaways
 
 
 class HumanizedDelay:

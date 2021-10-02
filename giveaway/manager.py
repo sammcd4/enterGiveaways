@@ -24,7 +24,7 @@ class GiveawayEntrant:
 
         # get today's date
         today = date.today()
-        self.today = today.strftime("%Y-%m-%d")
+        today_str = today.strftime("%Y-%m-%d")
 
         # read urls of giveaways to enter
         with open(url_file, 'r') as f:
@@ -34,7 +34,7 @@ class GiveawayEntrant:
             # Can potentially consolidate logic in for d in data loop
 
         # read urls of giveaways entered today
-        entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
+        entered_filename = self.get_entered_filename()
         entered_data = []
         if os.path.isfile(entered_filename):
             with open(entered_filename, "r") as f:
@@ -70,25 +70,31 @@ class GiveawayEntrant:
                 elif 'simplygluten-free.com' in url_str:
                     self.giveaways.append(ge.GlutenFreeEntry(url_str, expire_date, rating, num_entries))
 
+    # get entered filename matching the current date and person
+    def get_entered_filename(self):
+        from datetime import date
+        today = date.today()
+        today_str = today.strftime("%Y-%m-%d")
+        return 'logs/{}.entered'.format(today_str + '-' + self.person.first_name)
+
     def enter_giveaways(self):
 
         for g in self.giveaways:
             # open entered giveaways log file for writing
+
+            # TODO Test log multiple days in single run
             if g.actually_enter:
-                entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name)
+                entered_filename = self.get_entered_filename()
             else:
-                entered_filename = 'logs/{}.entered'.format(self.today + '-' + self.person.first_name + '-test')
+                entered_filename = self.get_entered_filename() + '-test'
 
-            writefile = open(entered_filename, 'a')
-
-            g.enter_giveaway(self.person)
-            if not g.no_delay:
-                time.sleep(self.delay + self.delay_noise * random.random())
-            if g.is_entered:
-                print('\tWriting to {}'.format(entered_filename))
-                writefile.write('{}\n'.format(g.url))
-
-            writefile.close()
+            with open(entered_filename, 'a') as f:
+                g.enter_giveaway(self.person)
+                if not g.no_delay:
+                    time.sleep(self.delay + self.delay_noise * random.random())
+                if g.is_entered:
+                    print('\tWriting to {}'.format(entered_filename))
+                    f.write('{}\n'.format(g.url))
 
 
 class GiveawayManager:
@@ -104,6 +110,7 @@ class GiveawayManager:
             self.entrants.append(entrant)
 
     def run(self):
+        # TODO here where we'd create multiple threads
         for entrant in self.entrants:
             entrant.enter_giveaways()
             time.sleep(self.delay + self.delay_noise * random.random())

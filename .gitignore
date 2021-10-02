@@ -1,6 +1,7 @@
 /logs/
 .idea/
 Entrants.txt
+GiveawayInfo.txt
 venv/lib/python3.7/*
 giveaway/.DS_Store
 venv/bin/chardetect
