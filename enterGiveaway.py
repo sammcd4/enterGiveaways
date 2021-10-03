@@ -3,7 +3,7 @@ import giveaway.manager as gm
 
 
 # Update all giveaways
-if True:
+if False:
     import giveaway.gather as g
     g.gather(exclude_steamy_kitchen=True)
 

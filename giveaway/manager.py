@@ -2,6 +2,7 @@ import giveaway.person as gp
 import giveaway.entry as ge
 import time
 import random
+import threading
 
 
 class GiveawayEntrant:
@@ -112,8 +113,10 @@ class GiveawayManager:
     def run(self):
         # TODO here where we'd create multiple threads
         for entrant in self.entrants:
-            entrant.enter_giveaways()
-            time.sleep(self.delay + self.delay_noise * random.random())
+            x = threading.Thread(target=entrant.enter_giveaways)
+            x.start()
+            #entrant.enter_giveaways()
+            #time.sleep(self.delay + self.delay_noise * random.random())
 
 
 def bulk_operation():
