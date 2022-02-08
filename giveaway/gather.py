@@ -166,9 +166,9 @@ class GiveawayGatherer:
         soup = self.get_soup(main_giveaway_page)
 
         # get number of pages
-        pages_elements = soup.findAll("div", {"class": "archive-description"})
+        pages = soup.find("div", {"class": "archive-pagination"}).findAll('a')
         # should just be one so get first
-        pages = pages_elements[0].find('p').findAll('a')
+        #pages = pages_elements[0].findAll('a')
         giveaway_pages = [page.get('href') for page in pages]
         giveaway_pages.append(main_giveaway_page)
         #print(giveaway_pages)
@@ -183,8 +183,8 @@ class GiveawayGatherer:
 
             with open(self.file_url, 'a') as file:
                 for gp in giveaway_posts:
-                    giveaway_link = gp.find('div').find('a').get('href')
-                    #print(giveaway_link)
+                    giveaway_link = gp.find("div", {"class": "archive-content"}).find('header').find('a').get('href')
+                    print(giveaway_link)
 
                     # extract giveaway expiration from webpage with another soup
                     try:

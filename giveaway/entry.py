@@ -87,6 +87,8 @@ class GiveawayEntry:
     # Enter Giveaway method
     def enter_giveaway(self, person):
         print(person.first_name + ' has opened ' + self.url)
+
+        # TODO make expiration status a subset of validity status (would be nice to have a GiveawayValidity class)
         if not self.is_valid:
             self.print('Giveaway has expired')
 
@@ -238,9 +240,9 @@ class GiveawayEntry:
             element = self._driver.find_element_by_id(box_id)
             if not element.is_selected():
                 unchecked = True
-                #print(f'element {box_id} has been unchecked')
-            #else:
-                #print(f'element {box_id} remained checked')
+                print(f'element {box_id} has been unchecked')
+            else:
+                print(f'element {box_id} remained checked')
         except:
             self.print(f'Unable to uncheck {box_id}')
             raise
