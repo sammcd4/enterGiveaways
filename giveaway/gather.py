@@ -46,8 +46,8 @@ class GiveawayGatherer:
 
     def get_giveaway_posts(self, giveaway_page):
         ssl_verify = False
-        if 'simplygluten-free' in giveaway_page:
-            print('\nGathering all new giveaways from Simply Gluten Free...')
+        if 'glutenfreeandmore' in giveaway_page:
+            print('\nGathering all new giveaways from Gluten Free and More...')
             ssl_verify = True
             element_type = 'div'
             element_class = 'post-s1'
@@ -88,7 +88,7 @@ class GiveawayGatherer:
     def gather_gluten_free(self):
         current_giveaway_data = self.current_giveaway_data()
 
-        main_giveaway_page = 'https://simplygluten-free.com/giveaways/'
+        main_giveaway_page = 'https://glutenfreeandmore.com/giveaways/'
         giveaway_posts = self.get_giveaway_posts(main_giveaway_page)
 
         with open(self.file_url, 'a') as file:
@@ -98,6 +98,12 @@ class GiveawayGatherer:
 
                 # extract giveaway expiration from webpage with another soup
                 soup_giveaway = self.get_soup(giveaway_link, ssl_verify=True)
+
+                # attempt to ignore any expired giveaways
+                expired_giveaways_field = soup_giveaway.find('span', {"class": "post-meta-cats-text"})
+                if expired_giveaways_field and expired_giveaways_field.find(text=re.compile('Expired Giveaways')):
+                    print(f'Expired: {giveaway_link}')
+                    continue
 
                 entry_content = soup_giveaway.find('div', {"class": "blog-post-single-content"})
                 expiration_date_str = soup_giveaway.body.find(text=re.compile('This giveaway ends on'))
@@ -145,6 +151,7 @@ class GiveawayGatherer:
                         print(f'Unable to convert {expiration_date_str} using any existing methods')
 
                 if expire_datetime < datetime.datetime.today():
+                    continue
                     expected_year = datetime.datetime.today().year + 1
                     if self.debug:
                         print(f'Expiration date is outdated. year is {expire_datetime.year}. Moving up year to {expected_year}.')

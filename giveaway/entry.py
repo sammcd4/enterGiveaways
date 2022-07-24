@@ -113,7 +113,7 @@ class GiveawayEntry:
         else:
             self.print('Skipping giveaway because only {}0% chance of entry'.format(self.rating))
 
-    #Prefill process
+    # Prefill process
     def prefill(self, person):
         #Unimplemented method
         return True
