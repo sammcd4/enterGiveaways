@@ -1,5 +1,5 @@
 import random
-
+import time
 
 class Person:
     first_name = ''
@@ -13,6 +13,24 @@ class Person:
         self.full_name = first_name + ' ' + last_name
         self.email = email
 
+class HumanizedDelay:
+
+    def __init__(self):
+        self._delay = 2.0  # nominal delay value in seconds
+        self.noise = 2.0
+
+    def apply(self):
+        time.sleep(self.delay + self.noise * random.random())
+
+    @property
+    def delay(self):
+        return self._delay
+
+    @delay.setter
+    def delay(self, value):
+        self._delay = value
+        if value == 0:
+            self.noise = 0
 
 def readpeoplefile(file):
     with open(file, 'r') as f:

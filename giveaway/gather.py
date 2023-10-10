@@ -1,11 +1,9 @@
-import requests
 from bs4 import BeautifulSoup
 import re
-import urllib
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import datetime
-import time
+from dateutil.relativedelta import relativedelta
 from datetime import date
 from urllib.request import Request, urlopen
 import requests
@@ -14,6 +12,7 @@ import ssl
 
 def get_iframe_link(giveaway_link):
     driver = webdriver.Chrome()
+    # driver.implicitly_wait(10)  # seconds
     driver.get(giveaway_link)
     # p_element = driver.find_element_by_id(id_='vs_widget')
     p_element = driver.find_elements_by_xpath('//*[contains(@id, \'vs_widget\')]')
@@ -33,11 +32,13 @@ def get_iframe_link(giveaway_link):
 class GiveawayGatherer:
     # Class used to automate gathering giveaway sites and populate the GiveawayInfo.txt file
 
-    file = '~/PycharmProjects/enterGiveaways/GiveawayInfo.txt'
-
     def __init__(self, file_url):
         self.file_url = file_url
         self.debug = True
+
+    def debug_print(self, debug_str):
+        if self.debug:
+            print(debug_str)
 
     def current_giveaway_data(self):
         with open(self.file_url, 'r') as f:
@@ -64,8 +65,7 @@ class GiveawayGatherer:
 
     def get_new_giveaway(self, current_giveaway_data, giveaway_link, giveaway_expiration, num_entries=1, matches=None, exclude=None):
         if [i for i in current_giveaway_data if giveaway_link in i]:
-            if self.debug:
-                print("Old giveaway: {}".format(giveaway_link))
+            self.debug_print(f'Old giveaway: {giveaway_link}')
         else:
             # filter out any that don't match
             if matches and not any(x in giveaway_link for x in matches):
@@ -116,8 +116,7 @@ class GiveawayGatherer:
 
                 # replace Sept with Sep
                 expiration_date_str = expiration_date_str.replace('Sept', 'Sep')
-                if self.debug:
-                    print(expiration_date_str)
+                self.debug_print(expiration_date_str)
 
                 # get expiration date string using %b %d, %Y format
                 b_flag = False
@@ -140,6 +139,10 @@ class GiveawayGatherer:
                     except:
                         m_flag = True
 
+                # default expiration date is 6 months from now
+                todays_date = datetime.datetime.today()
+                todays_date_plus_6mo = todays_date + relativedelta(months=6)
+                giveaway_expiration = f'{todays_date_plus_6mo.year}-{todays_date_plus_6mo.month}-{todays_date_plus_6mo.day}'
                 if not expire_datetime:
                     if b_flag:
                         print(f'Unable to convert {expiration_date_str} to datetime object with %b %d, %Y')
@@ -150,16 +153,13 @@ class GiveawayGatherer:
                     else:
                         print(f'Unable to convert {expiration_date_str} using any existing methods')
 
-                if expire_datetime < datetime.datetime.today():
-                    continue
-                    expected_year = datetime.datetime.today().year + 1
-                    if self.debug:
-                        print(f'Expiration date is outdated. year is {expire_datetime.year}. Moving up year to {expected_year}.')
-                    expire_datetime = expire_datetime.replace(year=expected_year)
+                # skip any expired giveaways
+                if expire_datetime:
+                    if expire_datetime < datetime.datetime.today():
+                        continue
 
-                giveaway_expiration = f'{expire_datetime.year}-{expire_datetime.month}-{expire_datetime.day}'
-                if self.debug:
-                    print(giveaway_expiration)
+                    giveaway_expiration = f'{expire_datetime.year}-{expire_datetime.month}-{expire_datetime.day}'
+                    self.debug_print(giveaway_expiration)
 
                 # Now that giveaway info is found, write it to GiveawayInfo.txt
                 # if giveaway_link in current_giveaway_data:
@@ -214,7 +214,7 @@ class GiveawayGatherer:
                     if len(digits) < 3:
                         print(f'Problem with date digits: {digits}')
                         continue
-                    giveaway_expiration = '20{}-{}-{}'.format(digits[2], digits[0], digits[1])
+                    giveaway_expiration = f'20{digits[2]}-{digits[0]}-{digits[1]}'
 
                     # Now that giveaway info is found, write it to GiveawayInfo.txt
                     # if giveaway_link in current_giveaway_data:
@@ -236,8 +236,7 @@ class GiveawayGatherer:
             count = 0
             for gp in giveaway_posts:
                 giveaway_link = gp.find('a').get('href')
-                if self.debug:
-                    print("Giveaway link: " + giveaway_link)
+                self.debug_print("Giveaway link: " + giveaway_link)
 
                 # get link to embedded iframe generated html
                 src_link = get_iframe_link(giveaway_link)
@@ -250,20 +249,15 @@ class GiveawayGatherer:
                     print('Unable to retrieve date element')
 
                 try:
+                    # expiration date
                     giveaway_ends = date_section_actual.next.text
-                    if self.debug:
-                        print('Giveaway ends:')
-                        print(giveaway_ends)
+                    self.debug_print(f'Giveaway ends: {giveaway_ends}')
                     ends_idx = giveaway_ends.find(' ')
-                    if self.debug:
-                        print('ends_idx')
-                        print(ends_idx)
+                    self.debug_print(f'ends_idx: {ends_idx}')
                     giveaway_expiration_str = giveaway_ends[ends_idx+1:]
-                    if self.debug:
-                        print(giveaway_expiration_str)
+                    self.debug_print(giveaway_expiration_str)
                     giveaway_datetime = datetime.datetime.strptime(giveaway_expiration_str, '%m-%d-%Y')
-                    if self.debug:
-                        print(giveaway_datetime)
+                    self.debug_print(giveaway_datetime)
                     giveaway_expiration = giveaway_datetime.strftime('%Y-%m-%d')
                 except:
                     print('Unable to parse expiration date from the embedded html')
@@ -299,7 +293,7 @@ class GiveawayGatherer:
 def gather(exclude_steamy_kitchen=False):
     g = GiveawayGatherer('GiveawayInfo.txt')
     g.gather_gluten_free()
-    g.gather_leites()
+    #g.gather_leites() # TODO support leites again
     if not exclude_steamy_kitchen:
         g.gather_steamy_kitchen()
 

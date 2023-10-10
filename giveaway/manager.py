@@ -102,6 +102,7 @@ class GiveawayManager:
     entrants = []
     delay = 50  # seconds of delay between giveaway entries
     delay_noise = 30  # seconds of delay noise (magnitude of randomization)
+    multithreaded = True
 
     def __init__(self, url_file, people):
 
@@ -113,10 +114,12 @@ class GiveawayManager:
     def run(self):
         # TODO here where we'd create multiple threads
         for entrant in self.entrants:
-            x = threading.Thread(target=entrant.enter_giveaways)
-            x.start()
-            #entrant.enter_giveaways()
-            #time.sleep(self.delay + self.delay_noise * random.random())
+            if self.multithreaded:
+                x = threading.Thread(target=entrant.enter_giveaways)
+                x.start()
+            else:
+                entrant.enter_giveaways()
+                time.sleep(self.delay + self.delay_noise * random.random())
 
 
 def bulk_operation():

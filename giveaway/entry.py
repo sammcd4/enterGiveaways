@@ -7,6 +7,7 @@ import sys
 import requests
 from bs4 import BeautifulSoup
 import logging
+import giveaway.person as person
 
 # create giveaway entry class
 from selenium.common.exceptions import StaleElementReferenceException
@@ -15,27 +16,6 @@ from selenium.common.exceptions import StaleElementReferenceException
 # TODO use logging instead of debug printing stuff on occasion
 # TODO perhaps replace custom entered files with logger files
 # TODO Total log to date for each entree
-# TODO thread for each person entering giveaways
-
-
-class HumanizedDelay:
-
-    def __init__(self):
-        self._delay = 2.0  # nominal delay value in seconds
-        self.noise = 2.0
-
-    def apply(self):
-        time.sleep(self.delay + self.noise * random.random())
-
-    @property
-    def delay(self):
-        return self._delay
-
-    @delay.setter
-    def delay(self, value):
-        self._delay = value
-        if value == 0:
-            self.noise = 0
 
 
 class GiveawayEntry:
@@ -46,7 +26,7 @@ class GiveawayEntry:
     rating = 10
     expiration_datetime = ''
     entered_date = ''
-    human_delay = HumanizedDelay()
+    human_delay = person.HumanizedDelay()
     is_valid = False
     actually_enter = True
     no_delay = False
@@ -83,6 +63,9 @@ class GiveawayEntry:
 
         if today <= self.expiration_datetime:
             self.is_valid = True
+
+    def read_config(self):
+        print('Configure GiveawayEntry')
 
     # Enter Giveaway method
     def enter_giveaway(self, person):
